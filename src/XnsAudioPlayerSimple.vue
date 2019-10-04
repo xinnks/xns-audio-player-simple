@@ -53,7 +53,7 @@ export default {
     RefreshIcon,SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon
   },
   mixins: [PlayerMixin],
-  props: {songs: {type: Array, default: [{ audio: 'https://rorg.z1.fm/d/3f/ti_ft_eminem_-_thats_all_she_wrote_(zv.fm).mp3', artist: 'T.I', tittle: 'That\'s All She Wrote (ft. Eminem)', album: '', cover: 'https://res.cloudinary.com/djx5h4cjt/image/upload/v1551189593/random/f55abc725080eb05147e45ce3cd406a8.1000x1000x1.jpg' }]}, playrWidth: {type: Number, default: 300}, continuousPlay: {type: Boolean, default: false}},
+  props: {songs: {type: Array, default: [{ audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3', artist: 'Chiller', tittle: 'funky disco house', album: '', cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg' }]}, playrWidth: {type: Number, default: 300}, continuousPlay: {type: Boolean, default: false}},
   data(){
     return { playerVolume: 1, playerProgressPercent: 0}
   },

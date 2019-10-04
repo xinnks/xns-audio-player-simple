@@ -1,5 +1,5 @@
 /*!
- * @xns-audio-player/simple v0.1.0
+ * xns-audio-player-simple v0.1.0
  * (c) James Sinkala
  * Released under the ISC License.
  */
@@ -1132,11 +1132,11 @@ var script = {
     songs: {
       type: Array,
       "default": [{
-        audio: 'https://rorg.z1.fm/d/3f/ti_ft_eminem_-_thats_all_she_wrote_(zv.fm).mp3',
-        artist: 'T.I',
-        tittle: 'That\'s All She Wrote (ft. Eminem)',
+        audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3',
+        artist: 'Chiller',
+        tittle: 'funky disco house',
         album: '',
-        cover: 'https://res.cloudinary.com/djx5h4cjt/image/upload/v1551189593/random/f55abc725080eb05147e45ce3cd406a8.1000x1000x1.jpg'
+        cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg'
       }]
     },
     playrWidth: {
@@ -1460,8 +1460,8 @@ var __vue_staticRenderFns__ = [];
 
 var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-fa522a46_0", {
-    source: ".pp[data-v-fa522a46]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-fa522a46]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
+  inject("data-v-44017dae_0", {
+    source: ".pp[data-v-44017dae]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-44017dae]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
     map: undefined,
     media: undefined
   });
@@ -1469,7 +1469,7 @@ var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
 /* scoped */
 
 
-var __vue_scope_id__ = "data-v-fa522a46";
+var __vue_scope_id__ = "data-v-44017dae";
 /* module identifier */
 
 var __vue_module_identifier__ = undefined;
@@ -9928,7 +9928,13 @@ if (inBrowser) {
 Vue$1.use(index_esm);
 var xnsPlayerStore = new index_esm.Store({
   state: {
-    Songs: [],
+    Songs: [{
+      audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3',
+      artist: 'Chiller',
+      tittle: 'funky disco house',
+      album: '',
+      cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg'
+    }],
     presentSongId: 0,
     lastSongId: 0,
     isPlaying: false,
