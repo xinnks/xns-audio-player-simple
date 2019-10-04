@@ -37,8 +37,8 @@ import {mapActions, mapMutations } from 'vuex'
       })
       setTimeout(function () {
         xns.updateLastSongId({lastSongId: xns.Songs.length - 1})
-        xns.playerVolume = xns.volume
-        xns.playerProgressPercent = xns.progressPercent
+        xns.playerVolume = xns.getVolume
+        xns.playerProgressPercent = xns.getProgressPercent
       }, 1000);
     },
     methods:{

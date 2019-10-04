@@ -1,5 +1,5 @@
 /*!
- * xns-audio-player-simple v0.1.4
+ * xns-audio-player-simple v0.1.6
  * (c) James Sinkala
  * Released under the ISC License.
  */
@@ -893,6 +893,36 @@ var mapMutations = normalizeNamespace(function (namespace, mutations) {
 });
 
 /**
+ * Reduce the code which written in Vue.js for getting the getters
+ * @param {String} [namespace] - Module's namespace
+ * @param {Object|Array} getters
+ * @return {Object}
+ */
+var mapGetters = normalizeNamespace(function (namespace, getters) {
+  var res = {};
+  normalizeMap(getters).forEach(function (ref) {
+    var key = ref.key;
+    var val = ref.val;
+
+    // The namespace has been mutated by normalizeNamespace
+    val = namespace + val;
+    res[key] = function mappedGetter () {
+      if (namespace && !getModuleByNamespace(this.$store, 'mapGetters', namespace)) {
+        return
+      }
+      if (process.env.NODE_ENV !== 'production' && !(val in this.$store.getters)) {
+        console.error(("[vuex] unknown getter: " + val));
+        return
+      }
+      return this.$store.getters[val]
+    };
+    // mark vuex getter for devtools
+    res[key].vuex = true;
+  });
+  return res
+});
+
+/**
  * Reduce the code which written in Vue.js for dispatch the action
  * @param {String} [namespace] - Module's namespace
  * @param {Object|Array} actions # Object's item can be a function which accept `dispatch` function as the first param, it can accept anthor params. You can dispatch action and do any other things in this function. specially, You need to pass anthor params from the mapped function.
@@ -1046,8 +1076,8 @@ var PlayerMixin = {
       xns.updateLastSongId({
         lastSongId: xns.Songs.length - 1
       });
-      xns.playerVolume = xns.volume;
-      xns.playerProgressPercent = xns.progressPercent;
+      xns.playerVolume = xns.getVolume;
+      xns.playerProgressPercent = xns.getProgressPercent;
     }, 1000);
   },
   methods: Object.assign({
@@ -1110,7 +1140,9 @@ var script = {
       }
     }
   },
-  computed: Object.assign({}, mapState(['Songs', 'presentSongId', 'lastSongId', 'isPlaying', 'audio', 'isPaused', 'timeBufferSecs', 'timeBufferMins', 'currentTrackTime', 'lastRecordedTrackTime', 'countCheck', 'currentTrackDuration', 'color', 'progressPercent', 'continuousPlay', 'timeLapse', 'volume', 'playerIsBuffering']))
+  computed: Object.assign({}, mapState(['Songs', 'presentSongId', 'lastSongId', 'isPlaying', 'audio', 'isPaused', 'timeBufferSecs', 'timeBufferMins', 'currentTrackTime', 'lastRecordedTrackTime', 'countCheck', 'currentTrackDuration', 'color', 'progressPercent', 'continuousPlay', 'timeLapse', 'volume', 'playerIsBuffering']), {}, mapGetters({
+    getVolume: 'getVolume'
+  }))
 };
 
 function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
@@ -1405,8 +1437,8 @@ var __vue_staticRenderFns__ = [];
 
 var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-3cc37734_0", {
-    source: ".pp[data-v-3cc37734]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-3cc37734]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
+  inject("data-v-44017dae_0", {
+    source: ".pp[data-v-44017dae]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-44017dae]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
     map: undefined,
     media: undefined
   });
@@ -1414,7 +1446,7 @@ var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
 /* scoped */
 
 
-var __vue_scope_id__ = "data-v-3cc37734";
+var __vue_scope_id__ = "data-v-44017dae";
 /* module identifier */
 
 var __vue_module_identifier__ = undefined;
@@ -1455,6 +1487,20 @@ var state = {
   color: '#8dff97',
   progressPercent: 0,
   continuousPlay: false
+};
+var getters = {
+  getSongs: function getSongs(state) {
+    return state.Songs;
+  },
+  getVolume: function getVolume(state) {
+    return state.volume;
+  },
+  getProgressPercent: function getProgressPercent(state) {
+    return state.progressPercent;
+  },
+  getTimeLapse: function getTimeLapse(state) {
+    return state.timeLapse;
+  }
 };
 var mutations = {
   addSongs: function addSongs(state, payload) {
@@ -1788,6 +1834,7 @@ var actions = {
 };
 var xnsPlayerStore = {
   state: state,
+  getters: getters,
   mutations: mutations,
   actions: actions
 };

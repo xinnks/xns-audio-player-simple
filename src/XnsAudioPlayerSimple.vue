@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
+import {mapState, mapGetters } from 'vuex'
 import './style.css'
 import RefreshIcon from 'vue-ionicons/dist/ios-refresh'
 import SkipBackwardIcon from 'vue-ionicons/dist/ios-skip-backward'
@@ -86,7 +86,8 @@ export default {
       'timeLapse',
       'volume',
       'playerIsBuffering'
-  ])
+  ]),
+    ...mapGetters({getVolume: 'getVolume'})
   },
 }
 </script>

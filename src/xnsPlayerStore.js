@@ -21,6 +21,13 @@ const state = {
   continuousPlay: false
 }
 
+const getters = {
+  getSongs: (state) => state.Songs,
+  getVolume: (state) => state.volume,
+  getProgressPercent: (state) => state.progressPercent,
+  getTimeLapse: (state) => state.timeLapse
+}
+
 const mutations = {
   addSongs(state, payload){
     state.Songs = payload.songs
@@ -307,6 +314,7 @@ const actions = {
 
 export default {
   state,
+  getters,
   mutations,
   actions
 }
