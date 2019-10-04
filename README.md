@@ -23,7 +23,7 @@ $ npm i xns-audio-player-simple
 ### Example
 
 ```sh
-<xns-stat-compare-pack :songs="playlist"></xns-stat-compare-pack>
+<xns-audio-player-simple :songs="playlist"></xns-audio-player-simple>
 ```
 
 ```sh
