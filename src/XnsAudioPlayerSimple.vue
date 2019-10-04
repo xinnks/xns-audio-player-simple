@@ -8,28 +8,28 @@
         <div class="tw-inline-flex tw-flex-grow tw-flex-col tw-items-center tw-w-full">
           <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-align-middle tw-justify-around tw-px-4 tw-py-1">
             <div v-if="presentSongId > 0 && lastSongId > 0" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="prevSong()">
-              <SkipBackwardIcon class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+              <SkipBackwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
             </div>
             <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="play()">
-              <PlayIcon class="tw-cursor-pointer tw-text-white" v-show="!isPlaying && !playerIsBuffering" w="30" h="30"/>
-              <PauseIcon class="tw-cursor-pointer tw-text-white" v-show="isPlaying && !playerIsBuffering" w="30" h="30" />
-              <BufferingIcon class="tw-text-white tw-cursor-pointer" animate="rotate" v-show="playerIsBuffering" w="30" h="30" />
+              <PlayIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" v-show="!isPlaying && !playerIsBuffering" w="30" h="30"/>
+              <PauseIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" v-show="isPlaying && !playerIsBuffering" w="30" h="30" />
+              <BufferingIcon :root-class="'pp-icons'" class="tw-text-white tw-cursor-pointer" animate="rotate" v-show="playerIsBuffering" w="30" h="30" />
             </div>
             <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="stop()">
-              <SquareIcon class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+              <SquareIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
             </div>
             <div v-if="presentSongId < lastSongId && lastSongId > 0" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="nextSong()">
-              <SkipForwardIcon class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
+              <SkipForwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
             </div>
             <div class="tw-flex-1 tw-w-1/5">
-              <span @click="changeContinuousPlay()" :class="continuousPlay ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RefreshIcon w="25" h="25"/></span>
+              <span @click="changeContinuousPlay()" :class="continuousPlay ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RefreshIcon :root-class="continuousPlay ? 'pp-icons-green' : 'pp-icons'" w="25" h="25"/></span>
             </div>
           </div>
-          <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-justify-between px-4 py-1">
+          <!-- <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-justify-between px-4 py-1">
             <div class="tw-flex-1 tw-w-full">
-              <!-- <vue-slider :width="150" :duration="0.1" :min="0" :max="1" v-model="playerVolume" :process="true" :interval="0.01"></vue-slider> -->
+              <vue-slider :width="150" :duration="0.1" :min="0" :max="1" v-model="playerVolume" :process="true" :interval="0.01"></vue-slider>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
@@ -326,5 +326,11 @@ export default {
     background: #303942;
     background: -webkit-linear-gradient(to right, rgba(43, 51, 59, 0.95), rgba(41, 50, 60, .95));
     background: linear-gradient(to right, rgba(43, 51, 59, 0.95), rgba(41, 50, 60, .95));
+  }
+  .pp-icons{
+    fill: white !important;
+  }
+  .pp-icons-green{
+    fill: limegreen;
   }
 </style>

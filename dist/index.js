@@ -1,5 +1,5 @@
 /*!
- * xns-audio-player-simple v0.1.12
+ * xns-audio-player-simple v0.1.13
  * (c) James Sinkala
  * Released under the ISC License.
  */
@@ -146,6 +146,7 @@ var script = {
   },
   mounted: function mounted() {
     var xns = this;
+    this.continuousPlay = this.repeatAll;
     setTimeout(function () {
       xns.lastSongId = xns.songs.length - 1;
     }, 1500);
@@ -355,6 +356,9 @@ var script = {
     scrubToTime: function scrubToTime() {
       this.audio.currentTime = this.progressPercent * this.audio.duration / 100;
       this.viewShit();
+    },
+    changeContinuousPlay: function changeContinuousPlay() {
+      this.continuousPlay = !this.continuousPlay;
     }
   }
 };
@@ -536,6 +540,7 @@ var __vue_render__ = function __vue_render__() {
   }, [_c('SkipBackwardIcon', {
     staticClass: "tw-cursor-pointer tw-text-white",
     attrs: {
+      "root-class": 'pp-icons',
       "w": "30",
       "h": "30"
     }
@@ -555,6 +560,7 @@ var __vue_render__ = function __vue_render__() {
     }],
     staticClass: "tw-cursor-pointer tw-text-white",
     attrs: {
+      "root-class": 'pp-icons',
       "w": "30",
       "h": "30"
     }
@@ -567,6 +573,7 @@ var __vue_render__ = function __vue_render__() {
     }],
     staticClass: "tw-cursor-pointer tw-text-white",
     attrs: {
+      "root-class": 'pp-icons',
       "w": "30",
       "h": "30"
     }
@@ -579,6 +586,7 @@ var __vue_render__ = function __vue_render__() {
     }],
     staticClass: "tw-text-white tw-cursor-pointer",
     attrs: {
+      "root-class": 'pp-icons',
       "animate": "rotate",
       "w": "30",
       "h": "30"
@@ -593,6 +601,7 @@ var __vue_render__ = function __vue_render__() {
   }, [_c('SquareIcon', {
     staticClass: "tw-cursor-pointer tw-text-white",
     attrs: {
+      "root-class": 'pp-icons',
       "w": "30",
       "h": "30"
     }
@@ -606,6 +615,7 @@ var __vue_render__ = function __vue_render__() {
   }, [_c('SkipForwardIcon', {
     staticClass: "tw-cursor-pointer tw-text-white",
     attrs: {
+      "root-class": 'pp-icons',
       "w": "30",
       "h": "30"
     }
@@ -620,31 +630,20 @@ var __vue_render__ = function __vue_render__() {
     }
   }, [_c('RefreshIcon', {
     attrs: {
+      "root-class": _vm.continuousPlay ? 'pp-icons-green' : 'pp-icons',
       "w": "25",
       "h": "25"
     }
-  })], 1)])]), _vm._v(" "), _vm._m(0)])])])]);
+  })], 1)])])])])])]);
 };
 
-var __vue_staticRenderFns__ = [function () {
-  var _vm = this;
-
-  var _h = _vm.$createElement;
-
-  var _c = _vm._self._c || _h;
-
-  return _c('div', {
-    staticClass: "tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-justify-between px-4 py-1"
-  }, [_c('div', {
-    staticClass: "tw-flex-1 tw-w-full"
-  })]);
-}];
+var __vue_staticRenderFns__ = [];
 /* style */
 
 var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-f0a69da0_0", {
-    source: ".pp[data-v-f0a69da0]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-f0a69da0]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
+  inject("data-v-d27fd684_0", {
+    source: ".pp[data-v-d27fd684]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-d27fd684]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}.pp-icons[data-v-d27fd684]{fill:#fff!important}.pp-icons-green[data-v-d27fd684]{fill:#32cd32}",
     map: undefined,
     media: undefined
   });
@@ -652,7 +651,7 @@ var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
 /* scoped */
 
 
-var __vue_scope_id__ = "data-v-f0a69da0";
+var __vue_scope_id__ = "data-v-d27fd684";
 /* module identifier */
 
 var __vue_module_identifier__ = undefined;
