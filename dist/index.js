@@ -1,5 +1,5 @@
 /*!
- * xns-audio-player-simple v0.1.8
+ * xns-audio-player-simple v0.1.6
  * (c) James Sinkala
  * Released under the ISC License.
  */

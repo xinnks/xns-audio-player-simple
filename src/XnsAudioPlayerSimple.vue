@@ -87,7 +87,11 @@ export default {
       'volume',
       'playerIsBuffering'
   ]),
-    ...mapGetters({getVolume: 'getVolume'})
+    ...mapGetters([
+      'getVolume',
+      'getProgressPercent',
+      'getProgressPercent'
+      ])
   },
 }
 </script>

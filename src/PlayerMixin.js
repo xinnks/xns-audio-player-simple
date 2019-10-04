@@ -27,19 +27,11 @@ import {mapActions, mapMutations } from 'vuex'
   },
     mounted(){
       let xns = this;
-      this.$store.commit({
-        type: 'addSongs',
-        songs: xns.songs
-      })
-      this.$store.commit({
-        type: 'updateContinuousPlay',
-        status: xns.repeatAll
-      })
-      setTimeout(function () {
-        xns.updateLastSongId({lastSongId: xns.Songs.length - 1})
-        xns.playerVolume = xns.getVolume
-        xns.playerProgressPercent = xns.getProgressPercent
-      }, 1000);
+      this.addSongs({ songs: xns.songs })
+      this.updateLastSongId({lastSongId: xns.Songs.length - 1})
+      this.updateContinuousPlay({ status: xns.repeatAll })
+      this.playerVolume = this.getVolume
+      this.playerProgressPercent = this.getProgressPercent
     },
     methods:{
       scrubChange(){
@@ -64,7 +56,8 @@ import {mapActions, mapMutations } from 'vuex'
         'updateAudioCurrentTime',
         'updateLastSongId',
         'changeAudioVolume',
-        'updateContinuousPlay'
+        'updateContinuousPlay',
+        'addSongs'
       ])
     }
  }
