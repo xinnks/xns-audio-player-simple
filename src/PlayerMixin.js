@@ -27,13 +27,15 @@ import {mapActions, mapMutations } from 'vuex'
   },
     mounted(){
       let xns = this;
-      console.log(this.Songs)
-      console.log(this.Songs.length)
-      this.addSongs({ songs: xns.songs })
-      this.updateLastSongId({lastSongId: xns.Songs.length - 1})
-      this.updateContinuousPlay({ status: xns.repeatAll })
-      this.playerVolume = this.getVolume
-      this.playerProgressPercent = this.getProgressPercent
+      setTimeout(function () {
+        xns.addSongs({ songs: xns.songs })
+        console.log(xns.Songs)
+        console.log(xns.Songs.length)
+        xns.updateLastSongId({lastSongId: xns.Songs.length - 1})
+        xns.updateContinuousPlay({ status: xns.repeatAll })
+        xns.playerVolume = xns.getVolume
+        xns.playerProgressPercent = xns.getProgressPercent
+      }, 2000);
     },
     methods:{
       scrubChange(){
