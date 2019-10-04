@@ -33,7 +33,7 @@ import {mapActions, mapMutations } from 'vuex'
       })
       this.$store.commit({
         type: 'updateContinuousPlay',
-        status: xns.continuousPlay
+        status: xns.repeatAll
       })
       setTimeout(function () {
         xns.updateLastSongId({lastSongId: xns.Songs.length - 1})

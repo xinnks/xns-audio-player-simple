@@ -53,7 +53,7 @@ export default {
     RefreshIcon,SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon
   },
   mixins: [PlayerMixin],
-  props: {songs: {type: Array, default: [{ audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3', artist: 'Chiller', tittle: 'funky disco house', album: '', cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg' }]}, playrWidth: {type: Number, default: 300}, continuousPlay: {type: Boolean, default: false}},
+  props: {songs: {type: Array, default: [{ audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3', artist: 'Chiller', tittle: 'funky disco house', album: '', cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg' }]}, playrWidth: {type: Number, default: 300}, repeatAll: {type: Boolean, default: false}},
   data(){
     return { playerVolume: 1, playerProgressPercent: 0}
   },
