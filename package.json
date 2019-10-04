@@ -1,6 +1,6 @@
 {
   "name": "xns-audio-player-simple",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "xns-audio-player with a simple ui",
   "main": "./dist/index.js",
   "scripts": {
