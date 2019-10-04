@@ -114,6 +114,7 @@ export default {
   },
   mounted () {
     let xns = this;
+    this.continuousPlay = this.repeatAll
     setTimeout(function () {
       xns.lastSongId = xns.songs.length - 1
     }, 1500);
@@ -307,6 +308,9 @@ export default {
     scrubToTime(){
       this.audio.currentTime = (this.progressPercent * this.audio.duration) / 100;
       this.viewShit()
+    },
+    changeContinuousPlay () {
+      this.continuousPlay = !this.continuousPlay
     }
   },
 }
