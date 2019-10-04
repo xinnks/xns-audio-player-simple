@@ -107,4 +107,7 @@ export default {
     background: -webkit-linear-gradient(to right, rgba(43, 51, 59, 0.95), rgba(41, 50, 60, .95));
     background: linear-gradient(to right, rgba(43, 51, 59, 0.95), rgba(41, 50, 60, .95));
   }
+  [v-cloak]{
+    display: none;
+  }
 </style>

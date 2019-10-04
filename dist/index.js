@@ -1,5 +1,5 @@
 /*!
- * xns-audio-player-simple v0.1.6
+ * xns-audio-player-simple v0.1.9
  * (c) James Sinkala
  * Released under the ISC License.
  */
@@ -1087,21 +1087,17 @@ var PlayerMixin = {
   },
   mounted: function mounted() {
     var xns = this;
-    this.$store.commit({
-      type: 'addSongs',
+    this.addSongs({
       songs: xns.songs
     });
-    this.$store.commit({
-      type: 'updateContinuousPlay',
+    this.updateLastSongId({
+      lastSongId: xns.Songs.length - 1
+    });
+    this.updateContinuousPlay({
       status: xns.repeatAll
     });
-    setTimeout(function () {
-      xns.updateLastSongId({
-        lastSongId: xns.Songs.length - 1
-      });
-      xns.playerVolume = xns.getVolume;
-      xns.playerProgressPercent = xns.getProgressPercent;
-    }, 1000);
+    this.playerVolume = this.getVolume;
+    this.playerProgressPercent = this.getProgressPercent;
   },
   methods: Object.assign({
     scrubChange: function scrubChange() {
@@ -1112,7 +1108,7 @@ var PlayerMixin = {
         status: !this.continuousPlay
       });
     }
-  }, mapActions(['viewShit', 'playSong', 'play', 'nextSong', 'prevSong', 'stop', 'scrubToTime', 'updateTimeLapse']), {}, mapMutations(['changeVolume', 'updateCountCheck', 'updateAudioCurrentTime', 'updateLastSongId', 'changeAudioVolume', 'updateContinuousPlay']))
+  }, mapActions(['viewShit', 'playSong', 'play', 'nextSong', 'prevSong', 'stop', 'scrubToTime', 'updateTimeLapse']), {}, mapMutations(['changeVolume', 'updateCountCheck', 'updateAudioCurrentTime', 'updateLastSongId', 'changeAudioVolume', 'updateContinuousPlay', 'addSongs']))
 };
 
 //
@@ -1165,9 +1161,7 @@ var script = {
       }
     }
   },
-  computed: Object.assign({}, mapState(['Songs', 'presentSongId', 'lastSongId', 'isPlaying', 'audio', 'isPaused', 'timeBufferSecs', 'timeBufferMins', 'currentTrackTime', 'lastRecordedTrackTime', 'countCheck', 'currentTrackDuration', 'color', 'progressPercent', 'continuousPlay', 'timeLapse', 'volume', 'playerIsBuffering']), {}, mapGetters({
-    getVolume: 'getVolume'
-  }))
+  computed: Object.assign({}, mapState(['Songs', 'presentSongId', 'lastSongId', 'isPlaying', 'audio', 'isPaused', 'timeBufferSecs', 'timeBufferMins', 'currentTrackTime', 'lastRecordedTrackTime', 'countCheck', 'currentTrackDuration', 'color', 'progressPercent', 'continuousPlay', 'timeLapse', 'volume', 'playerIsBuffering']), {}, mapGetters(['getVolume', 'getProgressPercent', 'getProgressPercent']))
 };
 
 function normalizeComponent(template, style, script, scopeId, isFunctionalTemplate, moduleIdentifier
@@ -1462,8 +1456,8 @@ var __vue_staticRenderFns__ = [];
 
 var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-09669929_0", {
-    source: ".pp[data-v-09669929]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-09669929]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
+  inject("data-v-54159e34_0", {
+    source: ".pp[data-v-54159e34]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-54159e34]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}[v-cloak][data-v-54159e34]{display:none}",
     map: undefined,
     media: undefined
   });
@@ -1471,7 +1465,7 @@ var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
 /* scoped */
 
 
-var __vue_scope_id__ = "data-v-09669929";
+var __vue_scope_id__ = "data-v-54159e34";
 /* module identifier */
 
 var __vue_module_identifier__ = undefined;
