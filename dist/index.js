@@ -1,5 +1,5 @@
 /*!
- * xns-audio-player-simple v0.1.9
+ * xns-audio-player-simple v0.1.10
  * (c) James Sinkala
  * Released under the ISC License.
  */
@@ -1087,6 +1087,8 @@ var PlayerMixin = {
   },
   mounted: function mounted() {
     var xns = this;
+    console.log(this.Songs);
+    console.log(this.Songs.length);
     this.addSongs({
       songs: xns.songs
     });

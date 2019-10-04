@@ -27,6 +27,8 @@ import {mapActions, mapMutations } from 'vuex'
   },
     mounted(){
       let xns = this;
+      console.log(this.Songs)
+      console.log(this.Songs.length)
       this.addSongs({ songs: xns.songs })
       this.updateLastSongId({lastSongId: xns.Songs.length - 1})
       this.updateContinuousPlay({ status: xns.repeatAll })
