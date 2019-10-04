@@ -42,6 +42,6 @@ export default {
 
 | Option | Type | Required | Default |
 | ------ | ---- | -------- | ------- |
-| plarWidth | Number | false | 300 |
+| playrWidth | Number | false | 300 |
 | songs | Array | true | (a demo track) |
 | repeatAll | Boolean | false | true |
