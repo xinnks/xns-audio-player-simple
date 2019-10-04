@@ -1,5 +1,5 @@
 /*!
- * xns-audio-player-simple v0.1.7
+ * xns-audio-player-simple v0.1.8
  * (c) James Sinkala
  * Released under the ISC License.
  */
@@ -1131,13 +1131,15 @@ var script = {
   props: {
     songs: {
       type: Array,
-      "default": [{
-        audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3',
-        artist: 'Chiller',
-        tittle: 'funky disco house',
-        album: '',
-        cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg'
-      }]
+      "default": function _default() {
+        return [{
+          audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3',
+          artist: 'Chiller',
+          tittle: 'funky disco house',
+          album: '',
+          cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg'
+        }];
+      }
     },
     playrWidth: {
       type: Number,
@@ -1460,8 +1462,8 @@ var __vue_staticRenderFns__ = [];
 
 var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
   if (!inject) return;
-  inject("data-v-321b2b69_0", {
-    source: ".pp[data-v-321b2b69]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-321b2b69]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
+  inject("data-v-09669929_0", {
+    source: ".pp[data-v-09669929]{background:#232526;background:-webkit-linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8));background:linear-gradient(to right,rgba(35,37,38,.8),rgba(65,67,69,.8))}.pp-controls[data-v-09669929]{background:#303942;background:-webkit-linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95));background:linear-gradient(to right,rgba(43,51,59,.95),rgba(41,50,60,.95))}",
     map: undefined,
     media: undefined
   });
@@ -1469,7 +1471,7 @@ var __vue_inject_styles__ = function __vue_inject_styles__(inject) {
 /* scoped */
 
 
-var __vue_scope_id__ = "data-v-321b2b69";
+var __vue_scope_id__ = "data-v-09669929";
 /* module identifier */
 
 var __vue_module_identifier__ = undefined;
