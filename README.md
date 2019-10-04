@@ -30,7 +30,7 @@ $ npm i xns-audio-player-simple
 export default {
   data () {
     return {
-      Playlist: [
+      playlist: [
         { audio: 'audio.mp3', artist: 'Superstar', tittle: 'Funky Disco House', album: 'Alpha Zulu', cover: 'cover-art.jpg' }
       ]
     }
