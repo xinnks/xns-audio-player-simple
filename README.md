@@ -19,13 +19,6 @@ import XnsAudioPlayerSimple from 'xns-audio-player-simple'
 Vue.use(XnsAudioPlayerSimple)
 ```
 
-
-https://res.cloudinary.com/djx5h4cjt/image/upload/v1581211589/xns-audio-player-simple/small-player.gif
-
-https://res.cloudinary.com/djx5h4cjt/image/upload/v1581211588/xns-audio-player-simple/large-player.gif
-
-https://res.cloudinary.com/djx5h4cjt/image/upload/v1581211587/xns-audio-player-simple/medium-player.gif
-
 ### Example
 
 ```sh
