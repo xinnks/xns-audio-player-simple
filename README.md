@@ -1,5 +1,5 @@
 # xns-audio-player-simple
-[xns-audio-player](https://github.com/xinnks/xns-audio-player "xns-audio-player") vue plugin with a simple ui
+A simple yet powerful music player for vuejs based on [xns-audio-player](https://github.com/xinnks/xns-audio-player "xns-audio-player")
 
 ![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581213111/xns-audio-player-simple/player3.gif "xns-audio-player-simple")
 
@@ -101,4 +101,4 @@ Returns an obect containing playing item's duration and current position in seco
 
 ### Important Note: ###
 
-To avoid playback and player seek issues you should make sure that where your audio files are served from are done so as a stream.
+To avoid playback and player seek issues you should make sure that where your audio files are served from are done so as a stream. [More Here](http://pervasivecode.blogspot.com/2012/09/currenttime-not-working-with-html5.html)
