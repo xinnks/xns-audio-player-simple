@@ -2,7 +2,7 @@
   <div>
     <div class="tw-flex tw-flex-col tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp" :style="'max-width:'+localPlayerWidth+'px'">
       <div class="tw-flex tw-flex-row tw-w-full tw-items-center tw-justify-between px-4 py-1">
-        <playback-progress :listen="playerIsPlaying || playerIsPaused" :current-time="currentTrackTime" :total-duration="currentTrackDuration" @seekedTo="seekPlayer" :intensity="volume"></playback-progress>
+        <xns-seek-bar :bar-color="localProgressBarColor" :bar-height="20" :listen="playerIsPlaying || playerIsPaused" :current-value="currentTrackTime" :total-value="currentTrackDuration" @seekedTo="seekPlayer" :intensity="volume"></xns-seek-bar>
       </div>
       <div :title="songsCount > 0 ? songs[currentTrackId].artist +' - '+songs[currentTrackId].title : 'No Audio To Play'" class="tw-flex tw-flex-row tw-w-full tw-p-r-3 tw-p-l-1 tw-m-0 tw-w-full pp-controls">
         <div class="tw-inline-flex tw-flex-grow-0 tw-w-12 tw-m-1 tw-float-left" :style="!(songsCount > 0 && songs[currentTrackId].cover !== '') ? 'background-color: '+coverColor : ''">
@@ -82,11 +82,11 @@ import VolumeAddIcon from 'vue-ionicons/dist/ios-add-circle'
 import VolumeReduceIconInactive from 'vue-ionicons/dist/ios-remove-circle-outline'
 import VolumeReduceIcon from 'vue-ionicons/dist/ios-remove-circle'
 import MusicalNoteIcon from 'vue-ionicons/dist/ios-musical-note'
-import PlaybackProgress from './PlaybackProgress'
+import XnsSeekBar from 'xns-seek-bar'
 export default {
   name: 'XnsAudioPlayerSimple',
   components: {
-    RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon, PlaybackProgress
+    RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon, XnsSeekBar
   },
   props: {
     playlist: {type: Array, default: () => []},
