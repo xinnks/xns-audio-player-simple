@@ -1,35 +1,67 @@
 <template>
   <div>
-    <div class="tw-flex tw-flex-row tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp" :style="'max-width:'+playrWidth+'px'">
-      <div class="tw-flex tw-flex-row tw-w-full tw-p-r-3 tw-p-l-1 tw-m-0 tw-w-full pp-controls">
-        <div class="tw-inline-flex tw-flex-grow-0 tw-w-12 tw-m-1 tw-float-left">
-          <img class="tw-h-full tw-w-auto" :src="songs[presentSongId].cover">
+    <div class="tw-flex tw-flex-col tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp" :style="'max-width:'+localPlayerWidth+'px'">
+      <div class="tw-flex tw-flex-row tw-w-full tw-items-center tw-justify-between px-4 py-1">
+        <playback-progress :listen="playerIsPlaying || playerIsPaused" :current-time="currentTrackTime" :total-duration="currentTrackDuration" @seekedTo="seekPlayer" :intensity="volume"></playback-progress>
+      </div>
+      <div :title="songsCount > 0 ? songs[currentTrackId].artist +' - '+songs[currentTrackId].title : 'No Audio To Play'" class="tw-flex tw-flex-row tw-w-full tw-p-r-3 tw-p-l-1 tw-m-0 tw-w-full pp-controls">
+        <div class="tw-inline-flex tw-flex-grow-0 tw-w-12 tw-m-1 tw-float-left" :style="!(songsCount > 0 && songs[currentTrackId].cover !== '') ? 'background-color: '+coverColor : ''">
+          <img class="tw-h-auto tw-w-full" v-if="songsCount > 0 && songs[currentTrackId].cover !== ''" :src="songs[currentTrackId].cover">
+          <MusicalNoteIcon v-else :root-class="'pp-icons tw-h-full tw-w-auto'" class="tw-cursor-pointer tw-text-white" w="40" h="40" />
         </div>
         <div class="tw-inline-flex tw-flex-grow tw-flex-col tw-items-center tw-w-full">
-          <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-align-middle tw-justify-around tw-px-4 tw-py-1">
-            <div v-if="presentSongId > 0 && lastSongId > 0" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="prevSong()">
-              <SkipBackwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+          <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-align-middle tw-justify-between tw-p-l-3 tw-p-r-1 tw-py-1">
+            <div class="tw-inline-flex tw-flex-row tw-justify-start">
+              <div v-if="((currentTrackId > 0) || continuousPlaybackStatus) && (songsCount > 0)" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="previous()">
+                <SkipBackwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+              </div>
+              <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle">
+                
+                <span @click="playTrack()" v-show="!playerIsPlaying && !playerIsLoading">
+                  <PlayIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
+                </span>
+                
+                <span @click="pause()" v-show="playerIsPlaying && !playerIsLoading" :disabled="songsCount <= 0">
+                  <PauseIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+                </span>
+                
+                <span>
+                  <BufferingIcon :root-class="'pp-icons'" class="tw-text-white tw-cursor-pointer" animate="beat" v-show="playerIsLoading" w="30" h="30" />
+                </span>
+              </div>
+              <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="stop()" :disabled="songsCount <= 0">
+                <SquareIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+              </div>
+              <div v-if="((currentTrackId < lastSongId) || continuousPlaybackStatus) && (songsCount > 0)" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="next()" :disabled="songsCount <= 0">
+                <SkipForwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
+              </div>
             </div>
-            <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="play()">
-              <PlayIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" v-show="!isPlaying && !playerIsBuffering" w="30" h="30"/>
-              <PauseIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" v-show="isPlaying && !playerIsBuffering" w="30" h="30" />
-              <BufferingIcon :root-class="'pp-icons'" class="tw-text-white tw-cursor-pointer" animate="rotate" v-show="playerIsBuffering" w="30" h="30" />
+
+            <div v-if="(localPlayerWidth >= 600) && (songs[currentTrackId].audio !== '') && showAudioData" class="tw-inline-flex tw-flex-row tw-justify-start tw-text-white tw-truncate">
+              {{songs[currentTrackId].artist || 'Unknown'}} - {{songs[currentTrackId].title || 'Unknown'}}
             </div>
-            <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="stop()">
-              <SquareIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
-            </div>
-            <div v-if="presentSongId < lastSongId && lastSongId > 0" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="nextSong()">
-              <SkipForwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
-            </div>
-            <div class="tw-flex-1 tw-w-1/5">
-              <span @click="changeContinuousPlay()" :class="continuousPlay ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RefreshIcon :root-class="continuousPlay ? 'pp-icons-green' : 'pp-icons'" w="25" h="25"/></span>
+
+            <div class="tw-inline-flex tw-flex-row tw-justify-end">
+              <div v-if="(localPlayerWidth >= 400) && showAudioDuration " class="tw-inline-flex tw-flex-row tw-justify-end tw-text-white timer">
+                {{(localPlayerWidth >= 600) ? $options.filters.doubleDigits(currentTrackTime) : ''}} {{(localPlayerWidth >= 600) ? '-' : ''}} {{currentTrackDuration | doubleDigits}}
+              </div>
+              <div class="tw-flex-1 tw-mx-1">
+                <div @click="decreaseVolume()" :disabled="(volume <= 0.1) || (songsCount <= 0)" :class="(localPlayerWidth >= 400) ? 'tw-bg-transparent tw-float-right tw-text-white tw-p-t-2' : 'tw-bg-transparent tw-float-right tw-text-white'">
+                  <VolumeReduceIcon v-if="volume > 0" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
+                  <VolumeReduceIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
+                </div>
+              </div>
+              <div :class="(localPlayerWidth >= 400) ? 'tw-flex-1 tw-mx-2 tw-p-t-2' : 'tw-flex-1 tw-mx-2'">
+                <div @click="increaseVolume()" :disabled="(volume >= 1) || (songsCount <= 0)" class="tw-bg-transparent tw-float-right tw-text-white">
+                  <VolumeAddIcon v-if="volume < 1" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
+                  <VolumeAddIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
+                </div>
+              </div>
+              <div :class="(localPlayerWidth >= 400) ? 'tw-flex-1 tw-mx-1 tw-p-t-2' : 'tw-flex-1 tw-mx-1'">
+                <span @click="updateContinuousPlaybackStatus()" :class="continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RepeatIcon :root-class="continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons'" class="tw-cursor-pointer tw-text-white" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/></span>
+              </div>
             </div>
           </div>
-          <!-- <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-justify-between px-4 py-1">
-            <div class="tw-flex-1 tw-w-full">
-              <vue-slider :width="150" :duration="0.1" :min="0" :max="1" v-model="playerVolume" :process="true" :interval="0.01"></vue-slider>
-            </div>
-          </div> -->
         </div>
       </div>
     </div>
@@ -38,280 +70,420 @@
 
 <script>
 import './output.css'
-import RefreshIcon from 'vue-ionicons/dist/ios-refresh'
+import RepeatIcon from 'vue-ionicons/dist/ios-repeat'
 import SkipBackwardIcon from 'vue-ionicons/dist/ios-skip-backward'
 import PlayIcon from 'vue-ionicons/dist/ios-play'
 import PauseIcon from 'vue-ionicons/dist/ios-pause'
 import SquareIcon from 'vue-ionicons/dist/ios-square'
 import SkipForwardIcon from 'vue-ionicons/dist/ios-skip-forward'
-import BufferingIcon from 'vue-ionicons/dist/ios-refresh-circle'
+import BufferingIcon from 'vue-ionicons/dist/ios-more'
+import VolumeAddIconInactive from 'vue-ionicons/dist/ios-add-circle-outline'
+import VolumeAddIcon from 'vue-ionicons/dist/ios-add-circle'
+import VolumeReduceIconInactive from 'vue-ionicons/dist/ios-remove-circle-outline'
+import VolumeReduceIcon from 'vue-ionicons/dist/ios-remove-circle'
+import MusicalNoteIcon from 'vue-ionicons/dist/ios-musical-note'
+import PlaybackProgress from './PlaybackProgress'
 export default {
   name: 'XnsAudioPlayerSimple',
   components: {
-    RefreshIcon,SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon
+    RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon, PlaybackProgress
   },
-  props: {songs: {type: Array, default: () => [{ audio: 'https://www.zapsplat.com/wp-content/uploads/2015/music-one/music_zapsplat_chiller.mp3', artist: 'Chiller', tittle: 'funky disco house', album: '', cover: 'https://i.pinimg.com/originals/a3/81/72/a3817233df6f98ecd03f399bbdc114f4.jpg' }]}, playrWidth: {type: Number, default: 300}, repeatAll: {type: Boolean, default: false}},
-  data(){
-    return { 
-      playerVolume: 1,
-      playerProgressPercent: 0,
-      presentSongId: 0,
-      lastSongId: 0,
-      isPlaying: false,
-      audio: new Audio(),
-      isPaused: false,
-      volume: 0.5,
-      //
-      timeLapse: false,
-      timeBufferSecs: 0,
-      timeBufferMins: 0,
-      playerIsBuffering: false,
-      currentTrackTime: 0,
-      lastRecordedTrackTime: -1,
-      countCheck: 0,
-      currentTrackDuration: 0,
-      //
-      color: '#8dff97',
-      progressPercent: 0,
-      continuousPlay: false
+  props: {
+    playlist: {type: Array, default: () => []},
+    playerWidth: {
+      type: Number,
+      default: 320
+    },
+    repeatAll: {
+      type: Boolean,
+      default: false
+    },
+    playerVolume: {
+      type: Number,
+      default: 0.5
+    },
+    stopPlayback: {
+      type: Boolean,
+      default: false
+    },
+    pausePlayback: {
+      type: Boolean,
+      default: false
+    },
+    showAudioDuration: {
+      type: Boolean,
+      default: true
+    },
+    showAudioData: {
+      type: Boolean,
+      default: true
+    },
+    progressBarColor: {
+      type: String,
+      default: '#008080'
     }
   },
-  filters: {
+  data(){
+    return {
+      // player details
+      localPlayerWidth: 320,
+      localProgressBarColor: '',
+
+      // audio tracks list
+      songs: [],
+      songsCount: 0,
+
+      //bools - playback helpers
+      playerIsPlaying: false,
+      playerIsPaused: false,
+      playerIsStopped: false,
+      isFirstTrack: true,
+      isMuted: false,
+      playerIsLoading: false,
+      continuousPlaybackStatus: false,
+
+      // player element
+      audio: new Audio(),
+
+      // player properties
+      volume: 0.5,
+      buffered: 0,
+
+      // custom helper properties
+      currentTrackId: 0,
+      currentTrackTime: 0,
+      currentTrackDuration: 0,
+      lastSongId: 0,
+
+      // cover art colors
+      coverColors: [ '#009688', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#ff9800', '#607d8b', '#795548', '#008080' ],
+      coverColor: ''
+    }
+  },
+  watch: {
+    immediate: true,
+    playerVolume () {
+      this.updatePlayerVolume(this.playerVolume)
+    },
+    repeatAll(){
+      this.updateContinuousPlaybackStatus(this.repeatAll)
+    },
+    playlist(){
+      this.updateSongs(this.playlist)
+    },
+    // let user programatically stop playback
+    stopPlayback(){
+      if(this.stopPlayback){
+        this.stop()
+      }
+    },
+    // let user programatically pause playback
+    pausePlayback(){
+      if(this.pausePlayback){
+        this.pause()
+      }
+    },
+    // observe player width adjustment
+    playerWidth(){
+      this.adjustPlayerDimensions(this.playerWidth)
+    },
+    // observe changes on the progress-bar color
+    progressBarColor(){
+      this.validateProgressColor(this.progressBarColor)
+    }
+  },
+  filters:{
     doubleDigits (val) {
       if(isNaN(val)){
         return '00'
       }else{
-        return val < 10 ? '0' + val : val
-      }
-    }
-  },
-  watch: {
-    volume () {
-      this.audio.volume = this.volume
-    },
-    timeLapse () {
-      let xns = this
-      if (this.timeLapse) {
-        this.timeLapse = false;
-        this.viewShit()
-      }
-      if((this.currentTrackDuration === 'NaN : NaN') || ((this.progressPercent === 'NaN') || (this.progressPercent === 0))){ // fix to displaying track time 'NaN : NaN' & timeBufferMins being stuck at 0
-        this.countCheck = 0
-        this.viewShit()
-        setTimeout(()=>{
-          if((this.progressPercent === 'NaN') || (this.progressPercent === 0)){
-              xns.audio.currentTime = xns.audio.currentTime;
-              xns.viewShit()
-          }
-        }, 2000)
+        if(val < 60){
+          return val.toFixed() < 10 ? '0 : 0' + val.toFixed() : '0 : ' + val.toFixed()
+        } else {
+          let seconds = (val.toFixed() % 60) == 60 ? '00' : (val % 60).toFixed()
+          let minutes = Math.floor(val.toFixed()/60).toFixed()
+          return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
+        }
       }
     },
-    audio () {
-      this.currentTrackTime = parseInt(this.audio.currentTime);
-      this.lastRecordedTrackTime = -1
-      // console.log('changed Track')
-    }
   },
   mounted () {
     let xns = this;
-    this.continuousPlay = this.repeatAll
+    this.songs = this.playlist
     setTimeout(function () {
+      xns.coverColor = xns.pickRandomColor() // assign random color
       xns.lastSongId = xns.songs.length - 1
-    }, 1500);
+      xns.updatePlayerVolume(xns.playerVolume)
+      xns.updateContinuousPlaybackStatus(xns.repeatAll)
+      xns.adjustPlayerDimensions(xns.playerWidth)
+      xns.updateSongs(xns.playlist)
+      xns.validateProgressColor(xns.progressBarColor)
+    }, 300);
     this.audio.volume = this.volume
   },
   methods: {
-    viewShit () {
-      let xns = this;
-      setTimeout(function () {
-        xns.currentTrackTime = parseInt(xns.audio.currentTime);
-        // console.log('Current Track Time: ' + xns.currentTrackTime + ' lstRecTime: ' + xns.lastRecordedTrackTime)
-        xns.progressPercent = (xns.currentTrackTime / xns.audio.duration) * 100;
-        if (xns.countCheck === 0) { // initializer start check
-            // console.log('Current Track Time: ' + xns.currentTrackTime + ' lstRecTime: ' + xns.lastRecordedTrackTime)
-            let ctdSecs = (parseInt(xns.audio.duration) % 60) < 10 ? '0' + parseInt(xns.audio.duration) % 60 : (parseInt(xns.audio.duration) % 60);
-            xns.currentTrackDuration = parseInt(parseInt(xns.audio.duration) / 60) + ' : ' + ctdSecs
-          }
-          if (xns.currentTrackTime !== xns.lastRecordedTrackTime) {
-            // console.log(parseInt(xns.audio.currentTime))
-            if (parseInt(xns.audio.currentTime) >= 60) {
-                xns.timeBufferMins = Math.floor(xns.audio.currentTime / 60);
-                xns.timeBufferSecs = parseInt(Math.floor(xns.audio.currentTime)) % 60
-            } else {
-                xns.timeBufferSecs = parseInt(Math.floor(xns.audio.currentTime))
-            }
-            xns.duration -= 1;
-            xns.timeLapse = !xns.timeLapse;
-            xns.timeLapse = true; // continue time lapse
-            xns.countCheck += 1;
-            //
-            xns.lastRecordedTrackTime = parseInt(Math.floor(xns.audio.currentTime))
-          } else {
-            if (!xns.audio.paused) {
-                xns.isPlaying = true;
-                xns.isPaused = false
-            } else {
-              xns.timeBufferMins = 0;
-              xns.timeBufferSecs = 0;
-              xns.timeLapse = false; // stop time lapse
-              this.countCheck = 0; // initializer end
-              xns.isPlaying = false;
-              xns.isPaused = false;
-              if (xns.continuousPlay) { // if continuous play === true
-                xns.nextSong()
-              }
-            }
-          }
-      }, 1000)
+    adjustPlayerDimensions(width){
+      this.localPlayerWidth = (width < 320 ) ? 320 : (width > 1366) ? 1366 : width
     },
-    play (songId = this.presentSongId, type = '') {
-      let xns = this
-      this.progressPercent = 0 // reset playback progress
-      if (this.isPlaying && !this.isPaused) {
-        if (type !== '') { // next/previous
-          this.audio.src = this.songs[songId].audio;
-          this.audio.play();
-          // initial track timer
-          this.timeBufferMins = 0
-          this.currentTrackDuration = 0
-          // change player controls icons
-          this.isPlaying = true;
-          this.isPaused = false
-          // begin buffering of track
-          this.playerIsBuffering = true
-          this.audio.addEventListener('loadeddata', () => {
-            xns.playerIsBuffering = false // enough media to begin playback
-          })
-          this.audio.addEventListener('playing', () => {
-            // Audio has started playing
-            xns.countCheck = 0;
-            xns.lastRecordedTrackTime = -1;
-            xns.timeBufferMins = 0;
-          })
-        } else { // pause
-          this.audio.pause();
-          this.isPlaying = false;
-          this.isPaused = true
-        }
-      } else if (!this.isPlaying && this.isPaused) {
-        if (type !== '') { // next/previous
-          this.audio.src = this.songs[songId].audio;
-          this.audio.play();
-          // initial track timer
-          this.timeBufferMins = 0
-          this.currentTrackDuration = 0
-          // change player controls icons
-          this.isPlaying = true;
-          this.isPaused = false
-          // begin buffering of track
-          this.playerIsBuffering = true
-          this.audio.addEventListener('loadeddata', () => {
-            xns.playerIsBuffering = false // enough media to begin playback
-          })
-          this.audio.addEventListener('playing', () => {
-            // player has moved to +type+ song
-            xns.countCheck = 0;
-            xns.lastRecordedTrackTime = -1;
-            xns.timeBufferMins = 0;
-          })
-        } else { // resume playing
-          this.audio.play();
-          // initial track timer
-          this.timeBufferMins = 0
-          this.currentTrackDuration = 0
-          // change player controls icons
-          this.isPlaying = true;
-          this.isPaused = false
-          // begin buffering of track
-          this.playerIsBuffering = true
-          this.audio.addEventListener('loadeddata', () => {
-            xns.playerIsBuffering = false // enough media to begin playback
-          })
-          this.audio.addEventListener('playing', () => {
-            // Audio has resumed playing
-            xns.countCheck = 0;
-            xns.lastRecordedTrackTime = -1;
-            xns.timeBufferMins = 0;
-          })
-        }
-      } else if (!this.isPlaying && !this.isPaused) {
-        this.audio.src = this.songs[songId].audio;
-        this.audio.play();
-        // initial track timer
-        this.timeBufferMins = 0
-        this.currentTrackDuration = 0
-        // change player controls icons
-        this.isPlaying = true;
-        this.isPaused = false
-        // begin buffering of track
-        this.playerIsBuffering = true
-        this.audio.addEventListener('loadeddata', () => {
-          xns.playerIsBuffering = false // enough media to begin playback
-        })
-        this.audio.addEventListener('playing', () => {
-          // Audio has started playing for the first time
-          xns.countCheck = 0;
-          xns.lastRecordedTrackTime = -1;
-          xns.timeBufferMins = 0;
-        })
-      }
-      //
-      this.countCheck = 0;
-      this.lastRecordedTrackTime = -1;
-      this.timeBufferMins = 0;
-      this.viewShit()
+    validateProgressColor(color){
+      this.localProgressBarColor = (this.coverColors.indexOf(color) !== -1) ? color : '#008080'
     },
-    nextSong () {
-    if ((this.presentSongId + 1) <= this.lastSongId) {
-        this.presentSongId += 1;
-        this.play(this.presentSongId, 'next')
+    pickRandomColor(){
+      return this.coverColors[Math.floor(Math.random() * this.coverColors.length)];
+    },
+    emitPlayerStatus(status){
+      let  xns = this
+      setTimeout(()=>{
+        xns.$emit('player-status', status)
+      }, 200)
+    },
+    decreaseVolume(){
+      this.updatePlayerVolume((this.volume - 0.1) >= 0 ? (this.volume - 0.1) : 0)
+    },
+    increaseVolume(){
+      this.updatePlayerVolume((this.volume + 0.1) <= 1 ? (this.volume + 0.1) : 1)
+    },
+    audioListening(listen = true){
+
+      if(listen){
+        // start listening
+        this.audio.addEventListener('loadeddata', this.proccessPlaybackStart, false)
+        this.audio.addEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false)
+        this.audio.addEventListener('pause', this.proccessPlaybackPause, false)
+        this.audio.addEventListener('emptied', this.proccessPlaybackEmptied, false)
+        this.audio.addEventListener('ended', this.proccessPlaybackStop, false)
       } else {
-        if (this.continuousPlay) { // if continuous play === true
-            this.play(0) // restart the playlist
+        // stop listening
+        this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false)
+        this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false)
+        this.audio.removeEventListener('pause', this.proccessPlaybackPause, false)
+        this.audio.removeEventListener('emptied', this.proccessPlaybackEmptied, false)
+        this.audio.removeEventListener('ended', this.proccessPlaybackStop, false)
+      }
+    },
+    updateUi(status){
+      this.updateLoadingStatus(status.loading)
+      this.updatePlayingStatus(status.playing)
+      this.updatePauseStatus(status.pause)
+      this.updateStopStatus(status.stop)
+    },
+
+    // when first frame of media has finished loading
+    proccessPlaybackStart() {
+      this.updateUi({loading: false, playing: true, pause: false, stop: false}) // update UI
+      this.updateCurrentTrackDuration(this.audio.duration) // get track duration
+      this.emitPlayerStatus('playing')
+    },
+
+    // when time indicated by the currentTime attribute has been updated
+    proccessPlaybackTimeUpdate() {
+      // check if track duration is NaN or zero and rectify
+      if(isNaN(this.currentTrackDuration) || !isFinite(this.currentTrackDuration)){
+        this.updateCurrentTrackDuration(260) // give reasonable track duration
+        // console.log("'Fixed' CurrentTrackDuration")
+      }  else {
+        this.updateCurrentTrackDuration((isNaN(this.audio.duration) || !isFinite(this.audio.duration)) ? 260 : this.audio.duration) // get track duration
+      }
+      // debug loading
+      if(this.playerIsLoading){
+        this.updateLoadingStatus(false)
+      }
+
+      this.updateCurrentTrackTime(this.audio.currentTime) // get current track time
+      this.updateUi({loading: false, playing: true, pause: false, stop: false}) // update UI
+    },
+
+    // called when element is paused
+    proccessPlaybackPause() {
+      this.updateUi({loading: false, playing: false, pause: true, stop: false}) // update UI
+      this.emitPlayerStatus('paused')
+    },
+
+    // called when loaded() is called
+    proccessPlaybackEmptied() {
+      // kill all event listeners
+      this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false)
+      this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false)
+      this.audio.removeEventListener('pause', this.proccessPlaybackEmptied, false)
+      // update times
+      this.updateCurrentTrackTime(0)
+      this.updateCurrentTrackDuration(100)
+
+      this.updateUi({loading: false, playing: false, pause: false, stop: true}) // update UI
+      this.emitPlayerStatus('stopped')
+    },
+
+    // when playback stops at the end of the media
+    proccessPlaybackStop() {
+      this.emitPlayerStatus('stopped')
+      // kill all event listeners
+      this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false)
+      this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false)
+      this.audio.removeEventListener('pause', this.proccessPlaybackPause, false)
+      // update times
+      this.updateCurrentTrackTime(0)
+      this.updateCurrentTrackDuration(100)
+
+      this.updateUi({loading: false, playing: false, pause: false, stop: true}) // update UI
+
+      // check if continuous playback is true
+      if(this.continuousPlaybackStatus){
+        // console.log("currentTrackId ",this.currentTrackId)
+        // check if there's a next track on the playlist
+        if((this.currentTrackId + 1) <= this.lastSongId){
+          // play next song
+          this.updatePlayingStatus(true)  // show player loading animation on UI
+          this.updateCurrentTrackId(this.currentTrackId + 1) // update current track id
+          this.playTrack() // play audio
         } else {
-          this.stop()
-          // console.log('We\'ve arrived at the end of the playlist!')
+          // play first track
+          this.updatePlayingStatus(true)  // show player loading animation on UI
+          this.updateCurrentTrackId(0) // update current track id
+          this.playTrack() // play audio
         }
+      }
+    },
+    updateSongs(songs){
+      this.songs = songs
+      this.songsCount = songs.length
+      this.lastSongId = songs.length - 1
+    },
+    updateContinuousPlaybackStatus(status = !this.continuousPlaybackStatus){
+      this.continuousPlaybackStatus = status
+    },
+    updateCurrentTrackId(trackId){
+      this.currentTrackId = trackId
+    },
+    updateCurrentTrackTime(time){
+      this.currentTrackTime = time
+      this.$emit('playback-timer', {playingItemDuration: this.currentTrackDuration, playingItemTime: this.currentTrackTime})
+    },
+    updateCurrentTrackDuration(time){
+      this.currentTrackDuration = time
+    },
+    updatePlayerVolume(volume){
+      this.volume = volume
+      this.audio.volume = this.volume
+    },
+    updateLoadingStatus(status) {
+      this.playerIsLoading = status
+    },
+    updatePlayingStatus(status) {
+        this.playerIsPlaying = status
+    },
+    updatePauseStatus(status) {
+      this.playerIsPaused = status
+    },
+    updateStopStatus(status) {
+      this.playerIsStopped = status
+    },
+    playTrack(trackId = this.currentTrackId, skip = false /* next / pevious skips */){
+      if(this.songsCount <= 0){ // play is only functional when there are songs on the playlist
+        return false
+      }
+      let xns = this
+      // if currentTrackTime is not 0, resume play
+      if(this.playerIsPaused & !skip){
+        this.audio.currentTime = this.currentTrackTime
+        setTimeout(() => {
+          this.audio.play()
+          xns.audioListening() // resume listening to audio oject
+        }, 10)
+      } else {
+        // abort current player progress
+        this.audio.load()
+        this.coverColor = this.pickRandomColor() // assign random cover color
         
+        this.playerIsLoading = true // show player loading animation on UI
+
+        this.currentTrackId = trackId // update current track id
+        this.audio.src = this.songs[trackId].audio
+        this.audio.play() // play audio
+        setTimeout(() => {
+          xns.audioListening() // listen to audio events
+        }, 10)
       }
-      this.countCheck = 0;
-      this.lastRecordedTrackTime = -1;
-      this.timeBufferMins = 0;
-      this.viewShit()
+      this.audio.volume = this.volume
     },
-    prevSong () {
-      if ((this.presentSongId - 1) >= 0) {
-        this.presentSongId -= 1;
-        this.play(this.presentSongId, 'prev')
+    pause(){
+      let xns = this
+      this.audioListening(false) // stop listening to audio events
+      setTimeout(() => {
+        xns.audio.pause()
+        xns.updateUi({loading: false, playing: false, pause: true, stop: false}) // update UI
+      }, 10)
+    },
+    stop(){
+      let xns = this
+      xns.audio.load();
+      setTimeout(() => {
+        this.currentTrackTime = 0
+        this.audio.currentTime = 0
+        xns.updateUi({loading: false, playing: false, pause: false, stop: true}) // update UI
+        xns.audioListening(false) // stop listening to audio events
+      }, 10)
+    },
+    next(){
+      let xns = this
+      // check if there's a next track on the playlist
+      if((this.currentTrackId + 1) <= this.lastSongId){
+        // play next song
+        this.currentTrackId += 1
+        this.audioListening(false) // stop listening to audio events
+        setTimeout(() => {
+          xns.playTrack(this.currentTrackId, true);
+        }, 10)
       } else {
-        this.stop()
-        // console.log('We\'ve arrived at the start of the playlist!')
+        // check if continuous playback is true
+        // TODO convert this, to repeat all check instead
+        if(this.continuousPlaybackStatus){
+          // play first track
+          this.currentTrackId = 0
+          this.audioListening(false) // stop listening to audio events
+          setTimeout(() => {
+            xns.playTrack(this.currentTrackId, true);
+          }, 10)
+        } else {
+            // console.log("Reached end of playlist")
+        }
       }
-      this.countCheck = 0;
-      this.lastRecordedTrackTime = -1;
-      this.timeBufferMins = 0;
-      this.viewShit()
     },
-    stop () {
-      if (this.audio) {
-        this.audio.load();
-        this.isPlaying = false;
-        this.isPaused = false;
-        this.continuousPlay = false // halt continuous play
+    previous(){
+      let xns = this
+      // check if there's a previous track on the playlist
+      if((this.currentTrackId - 1) >= 0){
+        // play previous song
+        this.currentTrackId -= 1
+        this.audioListening(false) // stop listening to audio events
+        setTimeout(() => {
+          xns.playTrack(this.currentTrackId, true)
+        }, 10)
       } else {
-        // console.log('Nothing Playing!')
+        // check if continuous playback is true
+        // TODO convert this, to repeat all check instead
+        if(this.continuousPlaybackStatus){
+          // play last song
+          this.currentTrackId = this.lastSongId
+          this.audioListening(false) // stop listening to audio events
+          setTimeout(() => {
+            xns.playTrack(this.currentTrackId, true)
+          }, 10)
+        } else {
+            // eslint-disable-next-line
+            console.log("Reached start of playlist")
+            // console.log("Reached start of playlist")
+        }
       }
-      this.countCheck = 1;
-      this.lastRecordedTrackTime = -1;
-      this.timeBufferMins = 0
     },
-    scrubToTime(){
-      this.audio.currentTime = (this.progressPercent * this.audio.duration) / 100;
-      this.viewShit()
+    seekPlayer(time){
+      let xns = this
+      this.audioListening(false) // stop listening to audio events
+      this.currentTrackTime = time // seek to given time
+      this.audio.currentTime = time // seek to given time
+      setTimeout(() =>{
+          xns.audioListening() // resume listening to audio oject
+      }, 10)
     },
-    changeContinuousPlay () {
-      this.continuousPlay = !this.continuousPlay
-    }
   },
 }
 </script>
@@ -330,7 +502,20 @@ export default {
   .pp-icons{
     fill: white !important;
   }
+  .pp-icons:focus{
+    fill: grey !important;
+  }
   .pp-icons-green{
     fill: limegreen;
+  }
+  ::selection{
+    background: none;
+  }
+  .timer{
+    margin: auto;
+    padding: 10px;
+  }
+  .tw-p-t-2{
+    padding-top: 7px;
   }
 </style>
