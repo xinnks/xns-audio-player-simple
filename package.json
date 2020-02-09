@@ -1,10 +1,10 @@
 {
   "name": "xns-audio-player-simple",
   "version": "1.0.0",
-  "description": "xns-audio-player with a simple ui",
+  "description": "a powerful little music player for vuejs",
   "main": "./dist/index.js",
   "scripts": {
-    "dev": "vue serve XnsStatComparePack.vue",
+    "dev": "vue serve src/XnsAudioPlayerSimple.vue",
     "build": "bili --name index --plugin vue --vue.css false",
     "build:css": "npx tailwind build src/style.css -o dist/xns-audio-player-simple.css",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,14 +17,10 @@
     "url": "git+https://github.com/xinnks/xns-audio-player-simple.git"
   },
   "keywords": [
+    "audio player",
     "audio",
     "player",
-    "audio",
-    "player",
-    "xns",
-    "xns",
-    "audio",
-    "player",
+    "xinnks",
     "vue",
     "vuejs"
   ],
