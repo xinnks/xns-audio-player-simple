@@ -12,8 +12,8 @@ module.exports = {
       'pctrl': 'rgba(51,51,51,.85)'
     },
     maxHeight: {
-      'simplePlyrmaxheight': '80px',
-      'simplePlyrmaxheightsm': '60px',
+      'simplePlyrmaxheight': '100px',
+      'simplePlyrmaxheightsm': '80px',
       'simplePlyrminheight': '50px',
       cover: '430px',
       coverx: '320px',
