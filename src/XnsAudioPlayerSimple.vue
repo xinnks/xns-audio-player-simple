@@ -82,11 +82,10 @@ import VolumeAddIcon from 'vue-ionicons/dist/ios-add-circle'
 import VolumeReduceIconInactive from 'vue-ionicons/dist/ios-remove-circle-outline'
 import VolumeReduceIcon from 'vue-ionicons/dist/ios-remove-circle'
 import MusicalNoteIcon from 'vue-ionicons/dist/ios-musical-note'
-import XnsSeekBar from 'xns-seek-bar'
 export default {
   name: 'XnsAudioPlayerSimple',
   components: {
-    RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon, XnsSeekBar
+    RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon
   },
   props: {
     playlist: {type: Array, default: () => []},
