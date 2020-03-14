@@ -40,7 +40,7 @@
     "postcss-import": "^12.0.1",
     "postcss-nested": "^4.1.2",
     "postcss-preset-env": "^6.7.0",
-    "rollup-plugin-postcss": "^2.0.3",
+    "rollup-plugin-postcss": "^2.4.1",
     "rollup-plugin-vue": "^4.2.0",
     "tailwindcss": "^1.2.0",
     "vue": "^2.6.11",
@@ -49,6 +49,6 @@
   },
   "dependencies": {
     "vue-ionicons": "^3.0.4",
-    "xns-seek-bar": "^1.0.0"
+    "xns-seek-bar": "^1.0.1"
   }
 }
