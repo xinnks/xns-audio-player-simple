@@ -1,5 +1,7 @@
 # xns-audio-player-simple
-A simple yet powerful music player for vuejs based on [xns-audio-player](https://github.com/xinnks/xns-audio-player "xns-audio-player")
+A simple yet powerful music player for vuejs based on [xns-audio-player](https://github.com/xinnks/xns-audio-player "xns-audio-player") 
+
+## [Demo](https://jamesinkala.me/awesomeness "xns-audio-player-simple demo")
 
 ![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581286605/xns-audio-player-simple/xns-audio-player-simple-2.0.0.gif "xns-audio-player-simple")
 
