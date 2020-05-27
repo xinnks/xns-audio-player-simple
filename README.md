@@ -104,3 +104,5 @@ Returns an obect containing playing item's duration and current position in seco
 ### Important Note: ###
 
 To avoid playback and player seek issues you should make sure that where your audio files are served from are done so as a stream. [More Here](http://pervasivecode.blogspot.com/2012/09/currenttime-not-working-with-html5.html)
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/default-orange.png)](https://www.buymeacoffee.com/Xinnks)
