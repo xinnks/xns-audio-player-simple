@@ -5,6 +5,7 @@ A simple yet powerful music player for vuejs based on [xns-audio-player](https:/
 
 ![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581286605/xns-audio-player-simple/xns-audio-player-simple-2.0.0.gif "xns-audio-player-simple")
 
+[![](https://badgen.net/npm/v/xns-audio-player-simple)](https://badgen.net/npm/v/xns-audio-player-simple) [![](https://badgen.net/npm/license/xns-audio-player-simple)](https://badgen.net/npm/license/xns-audio-player-simple) [![](https://badgen.net/packagephobia/publish/xns-audio-player-simple)](https://badgen.net/packagephobia/publish/xns-audio-player-simple) [![](https://badgen.net/bundlephobia/minzip/xns-audio-player-simple)](https://badgen.net/bundlephobia/minzip/xns-audio-player-simple)
 
 ### install
 
