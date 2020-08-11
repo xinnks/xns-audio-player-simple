@@ -25,7 +25,7 @@ Vue.use(XnsAudioPlayerSimple)
 ### Example
 
 ```sh
-<xns-audio-player-simple :playlist="playlist"></xns-audio-player-simple>
+<xns-audio-player-simple :playlist="songs"></xns-audio-player-simple>
 ```
 
 ```sh
