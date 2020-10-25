@@ -44,7 +44,7 @@ export default {
 
 | Option | Type | Required | Default |
 | ------ | ---- | -------- | ------- |
-| playerWidth | Number | false | 320 (1366 max) |
+| playerWidth | Number | false | 0 (100%) |
 | playlist | Array | true | [] |
 | repeatAll | Boolean | false | true |
 | playerVolume | Number | false | 0.5 |
@@ -57,7 +57,7 @@ export default {
 
 ### Options Details
 
-__playerWidth__ : Lets you set the width of the player in pixels, 320 <= __playerWidth__ <= 1366.
+__playerWidth__ : Lets you set the width of the player in pixels, when set to zero (the default width) the player's width adjusts to 100% of the parent's width.
 
 __playlist__ : Pass audio list as an array.
 

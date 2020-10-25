@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="tw-flex tw-flex-row tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp" :style="'max-width:'+localPlayerWidth+'px'">
+    <div class="tw-flex tw-flex-row tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp" :style="`width: ${localPlayerWidth === 0 ? '100%' : localPlayerWidth+'px'}`">
       <div class="tw-flex tw-flex-row tw-w-full tw-items-center tw-justify-between">
         <div ref="trackprogress" class="xns-seeker-progress-wrapper" :style="'height: '+progressBarHeight+'px; background: '+progressBarShadeColor">
           <div :style="'width: '+progress+'%; background: '+localProgressBarColor" class="xns-seeker-progress-bar">
@@ -94,7 +94,7 @@ export default {
     playlist: {type: Array, default: () => []},
     playerWidth: {
       type: Number,
-      default: 320
+      default: 0
     },
     repeatAll: {
       type: Boolean,
@@ -146,7 +146,7 @@ export default {
   data(){
     return {
       // player details
-      localPlayerWidth: 320,
+      localPlayerWidth: 0,
       localProgressBarColor: '',
 
       // audio tracks list
@@ -334,8 +334,9 @@ export default {
       let op = ((opacity + this.volume) * 100) <= 99 ? ((opacity + this.volume) * 100) : 99
       this.localProgressBarColor = `${hex}`+op
     },
+
     adjustPlayerDimensions(width){
-      this.localPlayerWidth = (width < 320 ) ? 320 : (width > 1366) ? 1366 : width
+      this.localPlayerWidth = ((width < 320) && (width !== 0)) ? 320 : width
     },
     validateProgressColor(color){
       this.localProgressBarColor = (this.coverColors.indexOf(color) !== -1) ? color : '#008080'
