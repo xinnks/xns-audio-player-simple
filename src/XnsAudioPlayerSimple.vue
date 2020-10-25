@@ -2,7 +2,10 @@
   <div>
     <div class="tw-flex tw-flex-row tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp" :style="'max-width:'+localPlayerWidth+'px'">
       <div class="tw-flex tw-flex-row tw-w-full tw-items-center tw-justify-between">
-        <xns-seek-bar :bar-color="localProgressBarColor" :bar-height="20" :listen="playerIsPlaying || playerIsPaused" :current-value="currentTrackTime" :total-value="currentTrackDuration" @seekedTo="seekPlayer" :intensity="volume"></xns-seek-bar>
+        <div ref="trackprogress" class="xns-seeker-progress-wrapper" :style="'height: '+progressBarHeight+'px; background: '+progressBarShadeColor">
+          <div :style="'width: '+progress+'%; background: '+localProgressBarColor" class="xns-seeker-progress-bar">
+          </div>
+        </div>
       </div>
       <div :title="songsCount > 0 ? songs[currentTrackId].artist +' - '+songs[currentTrackId].title : 'No Audio To Play'" class="tw-flex tw-flex-row tw-w-full tw-p-r-3 tw-p-l-1 tw-m-0 tw-w-full pp-controls">
         <div class="tw-inline-flex tw-flex-grow-0 tw-w-12 tw-m-1 tw-float-left" :style="!(songsCount > 0 && songs[currentTrackId].cover !== '') ? 'background-color: '+coverColor : ''">
@@ -120,6 +123,24 @@ export default {
     progressBarColor: {
       type: String,
       default: '#008080'
+    },
+
+    // progress bar
+    progressBarListen: {
+      type: Boolean,
+      default: true
+    },
+    progressBarHeight: {
+      type: Number,
+      default: 20
+    },
+    progressBarShadeColor: {
+      type: String,
+      default: '#e1e1e1'
+    },
+    progressBarColorIntensity: {
+      type: Number,
+      default: 0.5
     }
   },
   data(){
@@ -156,7 +177,12 @@ export default {
 
       // cover art colors
       coverColors: [ '#009688', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#ff9800', '#607d8b', '#795548', '#008080' ],
-      coverColor: ''
+      coverColor: '',
+
+
+      // progress bar
+      progress: 0, // % of currentTrackDuration
+      progressBarTotalWidth: 0
     }
   },
   watch: {
@@ -188,8 +214,22 @@ export default {
     },
     // observe changes on the progress-bar color
     progressBarColor(){
-      this.validateProgressColor(this.progressBarColor)
-    }
+      this.validateProgressColor(this.progressBarColor) // validate progressBarColor
+    },
+
+    // progress bar
+    currentTrackTime() {
+      this.calibrateProgress(this.currentTrackTime)
+    },
+    currentTrackDuration(){
+      this.calibrateProgress(this.currentTrackTime, this.currentTrackDuration)
+    },
+    progressBarListen(){
+      this.listenToEvents(this.progressBarListen)
+    },
+    progressBarColorIntensity(){
+      this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity)
+    },
   },
   filters:{
     doubleDigits (val) {
@@ -219,13 +259,87 @@ export default {
       xns.validateProgressColor(xns.progressBarColor)
     }, 300);
     this.audio.volume = this.volume
+
+
+    // progress bar
+    // calibrate progress
+    this.calibrateProgress(this.currentTrackTime, this.currentTrackDuration)
+
+    // set seek bar color
+    this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity)
+
+    // start listening to taps and clicks
+    this.listenToEvents(this.progressBarListen)
+
+    // recalibrate progress width on window width resize
+    window.addEventListener('resize', this.windowResize, false)
   },
   methods: {
+    // progress bar
+    getClickPosition(el){
+
+      el = el || window.event;
+
+      // get target element
+      let targ = el.target || el.srcElement;
+      if (targ.nodeType == 3) targ = targ.parentNode; // defeat Safari bug
+      this.progressBarTotalWidth = this.progressBarTotalWidth || targ.offsetWidth // set initial progressbar width
+      let seekWidth = el.offsetX
+
+      //change seek position
+      this.progress = (seekWidth / this.progressBarTotalWidth) *100
+
+      // convert seeked posiion(%) to value
+      let trackTime = (this.progress / 100) * this.currentTrackDuration
+
+      // emit seeked value
+      this.seekPlayer(trackTime)
+    },
+    detectMouseDown(e){
+      e.preventDefault() // prevent browser from moving objects, following links etc
+
+      // start listening to mouse movements
+      this.$refs.trackprogress.addEventListener("mousemove", this.getClickPosition, false)
+    },
+    detectMouseUp(){
+      // stop listening to mouse movements
+      this.$refs.trackprogress.removeEventListener("mousemove", this.getClickPosition, false)
+    },
+    windowResize(){
+      setTimeout(()=>{
+        this.progressBarTotalWidth = this.$refs.trackprogress.offsetWidth
+      }, 200)
+    },
+    listenToEvents(listen = true){
+      if (listen){
+        this.$refs.trackprogress.addEventListener("click", this.getClickPosition, false)
+        this.$refs.trackprogress.addEventListener("mousedown", this.detectMouseDown, false)
+        this.$refs.trackprogress.addEventListener("mouseup", this.detectMouseUp, false)
+      }
+      else{
+        this.$refs.trackprogress.removeEventListener("click", this.getClickPosition, false)
+        this.$refs.trackprogress.removeEventListener("mousedown", this.detectMouseDown, false)
+        this.$refs.trackprogress.removeEventListener("mouseup", this.detectMouseUp, false)
+      }
+    },
+
+    // calibrate progress
+    calibrateProgress(currentVal = this.currentTrackTime, totalVal = this.currentTrackDuration){
+      let max = ((currentVal / totalVal) *100)
+      this.progress = max <= 100 ? max : 100
+    },
+
+    // apply opacity to color
+    hexOpacity(hex, opacity){
+      let op = ((opacity + this.volume) * 100) <= 99 ? ((opacity + this.volume) * 100) : 99
+      this.localProgressBarColor = `${hex}`+op
+    },
     adjustPlayerDimensions(width){
       this.localPlayerWidth = (width < 320 ) ? 320 : (width > 1366) ? 1366 : width
     },
     validateProgressColor(color){
       this.localProgressBarColor = (this.coverColors.indexOf(color) !== -1) ? color : '#008080'
+      this.hexOpacity(this.localProgressBarColor, this.progressBarColorIntensity) // apply intensity to progressBarColor
     },
     pickRandomColor(){
       return this.coverColors[Math.floor(Math.random() * this.coverColors.length)];
@@ -516,5 +630,22 @@ export default {
   }
   .tw-p-t-2{
     padding-top: 7px;
+  }
+
+  /*progress bar*/
+   .xns-seeker-progress-wrapper{
+     display: flex;
+     flex: 1;
+     width: inherit;
+     position: relative;
+     overflow: hidden;
+   }
+  .xns-seeker-progress-bar{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 0;
+    height: inherit;
   }
 </style>
