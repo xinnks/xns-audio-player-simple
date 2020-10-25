@@ -4,7 +4,6 @@
       <div class="tw-flex tw-flex-row tw-w-full tw-items-center tw-justify-between">
         <div ref="trackprogress" class="xns-seeker-progress-wrapper" :style="'height: '+progressBarHeight+'px; background: '+progressBarShadeColor">
           <div :style="'width: '+progress+'%; background: '+localProgressBarColor" class="xns-seeker-progress-bar">
-            <canvas></canvas>
           </div>
         </div>
       </div>
