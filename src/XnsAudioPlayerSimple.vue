@@ -400,7 +400,6 @@ export default {
       // check if track duration is NaN or zero and rectify
       if(isNaN(this.currentTrackDuration) || !isFinite(this.currentTrackDuration)){
         this.updateCurrentTrackDuration(260) // give reasonable track duration
-        // console.log("'Fixed' CurrentTrackDuration")
       }  else {
         this.updateCurrentTrackDuration((isNaN(this.audio.duration) || !isFinite(this.audio.duration)) ? 260 : this.audio.duration) // get track duration
       }
@@ -448,7 +447,6 @@ export default {
 
       // check if continuous playback is true
       if(this.continuousPlaybackStatus){
-        // console.log("currentTrackId ",this.currentTrackId)
         // check if there's a next track on the playlist
         if((this.currentTrackId + 1) <= this.lastSongId){
           // play next song
@@ -589,8 +587,6 @@ export default {
             xns.playTrack(this.currentTrackId, true)
           }, 10)
         } else {
-            // eslint-disable-next-line
-            console.log("Reached start of playlist")
             // console.log("Reached start of playlist")
         }
       }
