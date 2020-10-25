@@ -57,7 +57,7 @@ export default {
 
 ### Options Details
 
-__playerWidth__ : Lets you set the width of the player in pixels, when set to zero (the default width) the player's width adjusts to 100% of the parent's width.
+__playerWidth__ : Lets you set the width of the player in pixels, when set to zero (the default value) the player's width adjusts to fit the content space width as prescribed by the parent.
 
 __playlist__ : Pass audio list as an array.
 
@@ -78,13 +78,10 @@ __progressBarColor__ : Let's you choose colors for the progress bar from the fol
 ['#008080', '#009688', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#ff9800', '#607d8b', '#795548']
 ```
 
-### Player Default Width ###
+### Player Width = 320px ###
 ![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581211589/xns-audio-player-simple/small-player.gif "xns-audio-player-simple")
 
-### Player Width = 450 ###
-![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581211587/xns-audio-player-simple/medium-player.gif "xns-audio-player-simple")
-
-### Player Max Width (1366) ###
+### Player Width = 1300px ###
 ![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581211588/xns-audio-player-simple/large-player.gif "xns-audio-player-simple")
 
 
