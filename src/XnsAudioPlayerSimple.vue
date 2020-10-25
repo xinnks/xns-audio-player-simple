@@ -40,28 +40,28 @@
               </div>
             </div>
 
-            <div v-if="(localPlayerWidth >= 600) && (songs[currentTrackId].audio !== '') && showAudioData" class="tw-inline-flex tw-flex-row tw-justify-start tw-text-white tw-truncate">
+            <div v-if="checkPlayerWidth(600) && songs[currentTrackId] && showAudioData" class="tw-inline-flex tw-flex-row tw-justify-start tw-text-white tw-truncate">
               {{songs[currentTrackId].artist || 'Unknown'}} - {{songs[currentTrackId].title || 'Unknown'}}
             </div>
 
             <div class="tw-inline-flex tw-flex-row tw-justify-end">
-              <div v-if="(localPlayerWidth >= 400) && showAudioDuration " class="tw-inline-flex tw-flex-row tw-justify-end tw-text-white timer">
-                {{(localPlayerWidth >= 600) ? $options.filters.doubleDigits(currentTrackTime) : ''}} {{(localPlayerWidth >= 600) ? '-' : ''}} {{currentTrackDuration | doubleDigits}}
+              <div v-if="checkPlayerWidth(400) && showAudioDuration " class="tw-inline-flex tw-flex-row tw-justify-end tw-text-white timer">
+                {{checkPlayerWidth(600) ? $options.filters.doubleDigits(currentTrackTime) : ''}} {{checkPlayerWidth(600) ? '-' : ''}} {{currentTrackDuration | doubleDigits}}
               </div>
               <div class="tw-flex-1 tw-mx-1">
-                <div @click="decreaseVolume()" :disabled="(volume <= 0.1) || (songsCount <= 0)" :class="(localPlayerWidth >= 400) ? 'tw-bg-transparent tw-float-right tw-text-white tw-p-t-2' : 'tw-bg-transparent tw-float-right tw-text-white'">
-                  <VolumeReduceIcon v-if="volume > 0" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
-                  <VolumeReduceIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
+                <div @click="decreaseVolume()" :disabled="(volume <= 0.1) || (songsCount <= 0)" :class="checkPlayerWidth(400) ? 'tw-bg-transparent tw-float-right tw-text-white tw-p-t-2' : 'tw-bg-transparent tw-float-right tw-text-white'">
+                  <VolumeReduceIcon v-if="volume > 0" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
+                  <VolumeReduceIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
                 </div>
               </div>
-              <div :class="(localPlayerWidth >= 400) ? 'tw-flex-1 tw-mx-2 tw-p-t-2' : 'tw-flex-1 tw-mx-2'">
+              <div :class="checkPlayerWidth(400) ? 'tw-flex-1 tw-mx-2 tw-p-t-2' : 'tw-flex-1 tw-mx-2'">
                 <div @click="increaseVolume()" :disabled="(volume >= 1) || (songsCount <= 0)" class="tw-bg-transparent tw-float-right tw-text-white">
-                  <VolumeAddIcon v-if="volume < 1" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
-                  <VolumeAddIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/>
+                  <VolumeAddIcon v-if="volume < 1" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
+                  <VolumeAddIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
                 </div>
               </div>
-              <div :class="(localPlayerWidth >= 400) ? 'tw-flex-1 tw-mx-1 tw-p-t-2' : 'tw-flex-1 tw-mx-1'">
-                <span @click="updateContinuousPlaybackStatus()" :class="continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RepeatIcon :root-class="continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons'" class="tw-cursor-pointer tw-text-white" :w="localPlayerWidth >= 500 ? '35' : '25'" :h="localPlayerWidth >= 500 ? '35' : '25'"/></span>
+              <div :class="checkPlayerWidth(400) ? 'tw-flex-1 tw-mx-1 tw-p-t-2' : 'tw-flex-1 tw-mx-1'">
+                <span @click="updateContinuousPlaybackStatus()" :class="continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RepeatIcon :root-class="continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons'" class="tw-cursor-pointer tw-text-white" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/></span>
               </div>
             </div>
           </div>
@@ -344,6 +344,12 @@ export default {
     pickRandomColor(){
       return this.coverColors[Math.floor(Math.random() * this.coverColors.length)];
     },
+
+    // check player width
+    checkPlayerWidth(val){
+      return ((this.localPlayerWidth >= val) || (this.localPlayerWidth === 0))
+    },
+
     emitPlayerStatus(status){
       let  xns = this
       setTimeout(()=>{
