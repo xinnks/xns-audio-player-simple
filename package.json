@@ -41,12 +41,12 @@
     "postcss": "^8.4.11",
     "rollup-plugin-postcss": "^3.1.8",
     "rollup-plugin-vue": "^5.1.9",
-    "vue": "^2.6.12",
     "vue-loader": "^15.9.3",
     "vue-template-compiler": "^2.6.12"
     "tailwindcss": "^3.0.23",
   },
   "dependencies": {
+    "vue": "^3.2.31",
     "vue-ionicons": "^3.0.5"
   },
   "eslintConfig": {
