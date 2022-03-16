@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vue serve src/XnsAudioPlayerSimple.vue",
     "build": "npx bili --format cjs --format umd --module-name xns-player-umd --bundle-node-modules --minify --no-map",
-    "build:css": "npx tailwind build src/style.css -o dist/xns-audio-player-simple.css",
+    "build:css": "npx tailwindcss -i src/tailwind.css -o src/output.css -m",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "files": [
@@ -32,22 +32,19 @@
   },
   "homepage": "https://github.com/xinnks/xns-audio-player-simple#readme",
   "devDependencies": {
-    "@fullhuman/postcss-purgecss": "^3.0.0",
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
-    "autoprefixer": "^10.0.1",
+    "autoprefixer": "^10.4.3",
     "bili": "^5.0.5",
     "cssnano": "^4.1.10",
-    "postcss-import": "^13.0.0",
-    "postcss-nested": "^5.0.1",
-    "postcss-preset-env": "^6.7.0",
+    "postcss": "^8.4.11",
     "rollup-plugin-postcss": "^3.1.8",
     "rollup-plugin-vue": "^5.1.9",
-    "tailwindcss": "^1.9.6",
     "vue": "^2.6.12",
     "vue-loader": "^15.9.3",
     "vue-template-compiler": "^2.6.12"
+    "tailwindcss": "^3.0.23",
   },
   "dependencies": {
     "vue-ionicons": "^3.0.5"
