@@ -46,7 +46,7 @@
 
             <div class="tw-inline-flex tw-flex-row tw-justify-end">
               <div v-if="checkPlayerWidth(400) && showAudioDuration " class="tw-inline-flex tw-flex-row tw-justify-end tw-text-white timer">
-                {{checkPlayerWidth(600) ? $options.filters.doubleDigits(currentTrackTime) : ''}} {{checkPlayerWidth(600) ? '-' : ''}} {{currentTrackDuration | doubleDigits}}
+                {{checkPlayerWidth(600) ? currentTrackTimeOutput : ''}} {{checkPlayerWidth(600) ? '-' : ''}} {{currentTrackDurationOutput}}
               </div>
               <div class="tw-flex-1 tw-mx-1">
                 <div @click="decreaseVolume()" :disabled="(volume <= 0.1) || (songsCount <= 0)" :class="checkPlayerWidth(400) ? 'tw-bg-transparent tw-float-right tw-text-white tw-p-t-2' : 'tw-bg-transparent tw-float-right tw-text-white'">
@@ -73,25 +73,28 @@
 
 <script>
 import './output.css'
-import RepeatIcon from 'vue-ionicons/dist/ios-repeat'
-import SkipBackwardIcon from 'vue-ionicons/dist/ios-skip-backward'
-import PlayIcon from 'vue-ionicons/dist/ios-play'
-import PauseIcon from 'vue-ionicons/dist/ios-pause'
-import SquareIcon from 'vue-ionicons/dist/ios-square'
-import SkipForwardIcon from 'vue-ionicons/dist/ios-skip-forward'
-import BufferingIcon from 'vue-ionicons/dist/ios-more'
-import VolumeAddIconInactive from 'vue-ionicons/dist/ios-add-circle-outline'
-import VolumeAddIcon from 'vue-ionicons/dist/ios-add-circle'
-import VolumeReduceIconInactive from 'vue-ionicons/dist/ios-remove-circle-outline'
-import VolumeReduceIcon from 'vue-ionicons/dist/ios-remove-circle'
-import MusicalNoteIcon from 'vue-ionicons/dist/ios-musical-note'
+import RepeatIcon from 'vue-ionicons/dist/ios-repeat.vue'
+import SkipBackwardIcon from 'vue-ionicons/dist/ios-skip-backward.vue'
+import PlayIcon from 'vue-ionicons/dist/ios-play.vue'
+import PauseIcon from 'vue-ionicons/dist/ios-pause.vue'
+import SquareIcon from 'vue-ionicons/dist/ios-square.vue'
+import SkipForwardIcon from 'vue-ionicons/dist/ios-skip-forward.vue'
+import BufferingIcon from 'vue-ionicons/dist/ios-more.vue'
+import VolumeAddIconInactive from 'vue-ionicons/dist/ios-add-circle-outline.vue'
+import VolumeAddIcon from 'vue-ionicons/dist/ios-add-circle.vue'
+import VolumeReduceIconInactive from 'vue-ionicons/dist/ios-remove-circle-outline.vue'
+import VolumeReduceIcon from 'vue-ionicons/dist/ios-remove-circle.vue'
+import MusicalNoteIcon from 'vue-ionicons/dist/ios-musical-note.vue'
 export default {
   name: 'XnsAudioPlayerSimple',
   components: {
     RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon
   },
   props: {
-    playlist: {type: Array, default: () => []},
+    playlist: {
+      type: Array,
+      default: () => []
+    },
     playerWidth: {
       type: Number,
       default: 0
@@ -186,7 +189,6 @@ export default {
     }
   },
   watch: {
-    immediate: true,
     playerVolume () {
       this.updatePlayerVolume(this.playerVolume)
     },
@@ -231,16 +233,29 @@ export default {
       this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity)
     },
   },
-  filters:{
-    doubleDigits (val) {
-      if(isNaN(val)){
+  computed: {
+    currentTrackTimeOutput () {
+      if(isNaN(this.currentTrackTime)){
         return '00'
       }else{
-        if(val < 60){
-          return val.toFixed() < 10 ? '0 : 0' + val.toFixed() : '0 : ' + val.toFixed()
+        if(this.currentTrackTime < 60){
+          return this.currentTrackTime.toFixed() < 10 ? '0 : 0' + this.currentTrackTime.toFixed() : '0 : ' + this.currentTrackTime.toFixed()
         } else {
-          let seconds = (val.toFixed() % 60) == 60 ? '00' : (val % 60).toFixed()
-          let minutes = Math.floor(val.toFixed()/60).toFixed()
+          let seconds = (this.currentTrackTime.toFixed() % 60) == 60 ? '00' : (this.currentTrackTime % 60).toFixed()
+          let minutes = Math.floor(this.currentTrackTime.toFixed()/60).toFixed()
+          return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
+        }
+      }
+    },
+    currentTrackDurationOutput () {
+      if(isNaN(this.currentTrackDuration)){
+        return '00'
+      }else{
+        if(this.currentTrackDuration < 60){
+          return this.currentTrackDuration.toFixed() < 10 ? '0 : 0' + this.currentTrackDuration.toFixed() : '0 : ' + this.currentTrackDuration.toFixed()
+        } else {
+          let seconds = (this.currentTrackDuration.toFixed() % 60) == 60 ? '00' : (this.currentTrackDuration % 60).toFixed()
+          let minutes = Math.floor(this.currentTrackDuration.toFixed()/60).toFixed()
           return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
         }
       }
