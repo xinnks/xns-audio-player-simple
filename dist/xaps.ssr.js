@@ -2,60 +2,530 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const A_ROTATE = 'rotate';
-const A_BEAT = 'beat';
-const A_SHAKE = 'shake';
+var script = {
+  name: 'XnsAudioPlayerSimple',
+  props: {
+    playlist: {
+      type: Array,
+      default: () => []
+    },
+    playerWidth: {
+      type: Number,
+      default: 0
+    },
+    repeatAll: {
+      type: Boolean,
+      default: false
+    },
+    playerVolume: {
+      type: Number,
+      default: 0.5
+    },
+    stopPlayback: {
+      type: Boolean,
+      default: false
+    },
+    pausePlayback: {
+      type: Boolean,
+      default: false
+    },
+    showAudioDuration: {
+      type: Boolean,
+      default: true
+    },
+    showAudioData: {
+      type: Boolean,
+      default: true
+    },
+    progressBarColor: {
+      type: String,
+      default: '#008080'
+    },
 
-var IoniconsMixin = {
-  computed: {
-    ionClass() {
-      let addClass = '';
-      if (this.animate === A_ROTATE) {
-        addClass = 'ion-rotate ';
-      } else if (this.animate === A_BEAT) {
-        addClass = 'ion-beat ';
-      } else if (this.animate === A_SHAKE) {
-        addClass = 'ion-shake ';
-      }
-
-      return `${this.rootClass} ${addClass}`
+    // progress bar
+    progressBarListen: {
+      type: Boolean,
+      default: true
+    },
+    progressBarHeight: {
+      type: Number,
+      default: 20
+    },
+    progressBarShadeColor: {
+      type: String,
+      default: '#e1e1e1'
+    },
+    progressBarColorIntensity: {
+      type: Number,
+      default: 0.5
     }
   },
-  props: {
-    title: {
-      type: String,
-      default: ''
-    },
-    rootClass: {
-      type: String,
-      default: ''
-    },
-    w: {
-      type: String,
-      default: '1em'
-    },
-    h: {
-      type: String,
-      default: '1em'
-    },
-    animate: {
-      type: String,
-      default: ''
-    }
-  }
-};
-
-var script$c = {
-  name: "ios-repeat-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Repeat Icon";
+  data(){
     return {
-      iconTitle: iconTitle
+      // player details
+      localPlayerWidth: 0,
+      localProgressBarColor: '',
+
+      // audio tracks list
+      songs: [],
+      songsCount: 0,
+
+      //bools - playback helpers
+      playerIsPlaying: false,
+      playerIsPaused: false,
+      playerIsStopped: false,
+      isFirstTrack: true,
+      isMuted: false,
+      playerIsLoading: false,
+      continuousPlaybackStatus: false,
+
+      // player element
+      audio: new Audio(),
+
+      // player properties
+      volume: 0.5,
+      buffered: 0,
+
+      // custom helper properties
+      currentTrackId: 0,
+      currentTrackTime: 0,
+      currentTrackDuration: 0,
+      lastSongId: 0,
+
+      // cover art colors
+      coverColors: [ '#009688', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#ff9800', '#607d8b', '#795548', '#008080' ],
+      coverColor: '',
+
+
+      // progress bar
+      progress: 0, // % of currentTrackDuration
+      progressBarTotalWidth: 0
     }
-  }
+  },
+  watch: {
+    playerVolume () {
+      this.updatePlayerVolume(this.playerVolume);
+    },
+    repeatAll(){
+      this.updateContinuousPlaybackStatus(this.repeatAll);
+    },
+    playlist(){
+      this.updateSongs(this.playlist);
+    },
+    // let user programatically stop playback
+    stopPlayback(){
+      if(this.stopPlayback){
+        this.stop();
+      }
+    },
+    // let user programatically pause playback
+    pausePlayback(){
+      if(this.pausePlayback){
+        this.pause();
+      }
+    },
+    // observe player width adjustment
+    playerWidth(){
+      this.adjustPlayerDimensions(this.playerWidth);
+    },
+    // observe changes on the progress-bar color
+    progressBarColor(){
+      this.validateProgressColor(this.progressBarColor); // validate progressBarColor
+    },
+
+    // progress bar
+    currentTrackTime() {
+      this.calibrateProgress(this.currentTrackTime);
+    },
+    currentTrackDuration(){
+      this.calibrateProgress(this.currentTrackTime, this.currentTrackDuration);
+    },
+    progressBarListen(){
+      this.listenToEvents(this.progressBarListen);
+    },
+    progressBarColorIntensity(){
+      this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity);
+    },
+  },
+  computed: {
+    currentTrackTimeOutput () {
+      if(isNaN(this.currentTrackTime)){
+        return '00'
+      }else {
+        if(this.currentTrackTime < 60){
+          return this.currentTrackTime.toFixed() < 10 ? '0 : 0' + this.currentTrackTime.toFixed() : '0 : ' + this.currentTrackTime.toFixed()
+        } else {
+          let seconds = (this.currentTrackTime.toFixed() % 60) == 60 ? '00' : (this.currentTrackTime % 60).toFixed();
+          let minutes = Math.floor(this.currentTrackTime.toFixed()/60).toFixed();
+          return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
+        }
+      }
+    },
+    currentTrackDurationOutput () {
+      if(isNaN(this.currentTrackDuration)){
+        return '00'
+      }else {
+        if(this.currentTrackDuration < 60){
+          return this.currentTrackDuration.toFixed() < 10 ? '0 : 0' + this.currentTrackDuration.toFixed() : '0 : ' + this.currentTrackDuration.toFixed()
+        } else {
+          let seconds = (this.currentTrackDuration.toFixed() % 60) == 60 ? '00' : (this.currentTrackDuration % 60).toFixed();
+          let minutes = Math.floor(this.currentTrackDuration.toFixed()/60).toFixed();
+          return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
+        }
+      }
+    },
+  },
+  mounted () {
+    let xns = this;
+    this.songs = this.playlist;
+    setTimeout(function () {
+      xns.coverColor = xns.pickRandomColor(); // assign random color
+      xns.lastSongId = xns.songs.length - 1;
+      xns.updatePlayerVolume(xns.playerVolume);
+      xns.updateContinuousPlaybackStatus(xns.repeatAll);
+      xns.adjustPlayerDimensions(xns.playerWidth);
+      xns.updateSongs(xns.playlist);
+      xns.validateProgressColor(xns.progressBarColor);
+    }, 300);
+    this.audio.volume = this.volume;
+
+
+    // progress bar
+    // calibrate progress
+    this.calibrateProgress(this.currentTrackTime, this.currentTrackDuration);
+
+    // set seek bar color
+    this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity);
+
+    // start listening to taps and clicks
+    this.listenToEvents(this.progressBarListen);
+
+    // recalibrate progress width on window width resize
+    window.addEventListener('resize', this.windowResize, false);
+  },
+  methods: {
+    // progress bar
+    getClickPosition(el){
+
+      el = el || window.event;
+
+      // get target element
+      let targ = el.target || el.srcElement;
+      if (targ.nodeType == 3) targ = targ.parentNode; // defeat Safari bug
+      this.progressBarTotalWidth = this.progressBarTotalWidth || targ.offsetWidth; // set initial progressbar width
+      let seekWidth = el.offsetX;
+
+      //change seek position
+      this.progress = (seekWidth / this.progressBarTotalWidth) *100;
+
+      // convert seeked posiion(%) to value
+      let trackTime = (this.progress / 100) * this.currentTrackDuration;
+
+      // emit seeked value
+      this.seekPlayer(trackTime);
+    },
+    detectMouseDown(e){
+      e.preventDefault(); // prevent browser from moving objects, following links etc
+
+      // start listening to mouse movements
+      this.$refs.trackprogress.addEventListener("mousemove", this.getClickPosition, false);
+    },
+    detectMouseUp(){
+      // stop listening to mouse movements
+      this.$refs.trackprogress.removeEventListener("mousemove", this.getClickPosition, false);
+    },
+    windowResize(){
+      setTimeout(()=>{
+        this.progressBarTotalWidth = this.$refs.trackprogress.offsetWidth;
+      }, 200);
+    },
+    listenToEvents(listen = true){
+      if (listen){
+        this.$refs.trackprogress.addEventListener("click", this.getClickPosition, false);
+        this.$refs.trackprogress.addEventListener("mousedown", this.detectMouseDown, false);
+        this.$refs.trackprogress.addEventListener("mouseup", this.detectMouseUp, false);
+      }
+      else {
+        this.$refs.trackprogress.removeEventListener("click", this.getClickPosition, false);
+        this.$refs.trackprogress.removeEventListener("mousedown", this.detectMouseDown, false);
+        this.$refs.trackprogress.removeEventListener("mouseup", this.detectMouseUp, false);
+      }
+    },
+
+    // calibrate progress
+    calibrateProgress(currentVal = this.currentTrackTime, totalVal = this.currentTrackDuration){
+      let max = ((currentVal / totalVal) *100);
+      this.progress = max <= 100 ? max : 100;
+    },
+
+    // apply opacity to color
+    hexOpacity(hex, opacity){
+      let op = ((opacity + this.volume) * 100) <= 99 ? ((opacity + this.volume) * 100) : 99;
+      this.localProgressBarColor = `${hex}`+op;
+    },
+
+    adjustPlayerDimensions(width){
+      this.localPlayerWidth = ((width < 320) && (width !== 0)) ? 320 : width;
+    },
+    validateProgressColor(color){
+      this.localProgressBarColor = (this.coverColors.indexOf(color) !== -1) ? color : '#008080';
+      this.hexOpacity(this.localProgressBarColor, this.progressBarColorIntensity); // apply intensity to progressBarColor
+    },
+    pickRandomColor(){
+      return this.coverColors[Math.floor(Math.random() * this.coverColors.length)];
+    },
+
+    // check player width
+    checkPlayerWidth(val){
+      return ((this.localPlayerWidth >= val) || (this.localPlayerWidth === 0))
+    },
+
+    emitPlayerStatus(status){
+      let  xns = this;
+      setTimeout(()=>{
+        xns.$emit('player-status', status);
+      }, 200);
+    },
+    decreaseVolume(){
+      this.updatePlayerVolume((this.volume - 0.1) >= 0 ? (this.volume - 0.1) : 0);
+    },
+    increaseVolume(){
+      this.updatePlayerVolume((this.volume + 0.1) <= 1 ? (this.volume + 0.1) : 1);
+    },
+    audioListening(listen = true){
+
+      if(listen){
+        // start listening
+        this.audio.addEventListener('loadeddata', this.proccessPlaybackStart, false);
+        this.audio.addEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
+        this.audio.addEventListener('pause', this.proccessPlaybackPause, false);
+        this.audio.addEventListener('emptied', this.proccessPlaybackEmptied, false);
+        this.audio.addEventListener('ended', this.proccessPlaybackStop, false);
+      } else {
+        // stop listening
+        this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false);
+        this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
+        this.audio.removeEventListener('pause', this.proccessPlaybackPause, false);
+        this.audio.removeEventListener('emptied', this.proccessPlaybackEmptied, false);
+        this.audio.removeEventListener('ended', this.proccessPlaybackStop, false);
+      }
+    },
+    updateUi(status){
+      this.updateLoadingStatus(status.loading);
+      this.updatePlayingStatus(status.playing);
+      this.updatePauseStatus(status.pause);
+      this.updateStopStatus(status.stop);
+    },
+
+    // when first frame of media has finished loading
+    proccessPlaybackStart() {
+      this.updateUi({loading: false, playing: true, pause: false, stop: false}); // update UI
+      this.updateCurrentTrackDuration(this.audio.duration); // get track duration
+      this.emitPlayerStatus('playing');
+    },
+
+    // when time indicated by the currentTime attribute has been updated
+    proccessPlaybackTimeUpdate() {
+      // check if track duration is NaN or zero and rectify
+      if(isNaN(this.currentTrackDuration) || !isFinite(this.currentTrackDuration)){
+        this.updateCurrentTrackDuration(260); // give reasonable track duration
+      }  else {
+        this.updateCurrentTrackDuration((isNaN(this.audio.duration) || !isFinite(this.audio.duration)) ? 260 : this.audio.duration); // get track duration
+      }
+      // debug loading
+      if(this.playerIsLoading){
+        this.updateLoadingStatus(false);
+      }
+
+      this.updateCurrentTrackTime(this.audio.currentTime); // get current track time
+      this.updateUi({loading: false, playing: true, pause: false, stop: false}); // update UI
+    },
+
+    // called when element is paused
+    proccessPlaybackPause() {
+      this.updateUi({loading: false, playing: false, pause: true, stop: false}); // update UI
+      this.emitPlayerStatus('paused');
+    },
+
+    // called when loaded() is called
+    proccessPlaybackEmptied() {
+      // kill all event listeners
+      this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false);
+      this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
+      this.audio.removeEventListener('pause', this.proccessPlaybackEmptied, false);
+      // update times
+      this.updateCurrentTrackTime(0);
+      this.updateCurrentTrackDuration(100);
+
+      this.updateUi({loading: false, playing: false, pause: false, stop: true}); // update UI
+      this.emitPlayerStatus('stopped');
+    },
+
+    // when playback stops at the end of the media
+    proccessPlaybackStop() {
+      this.emitPlayerStatus('stopped');
+      // kill all event listeners
+      this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false);
+      this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
+      this.audio.removeEventListener('pause', this.proccessPlaybackPause, false);
+      // update times
+      this.updateCurrentTrackTime(0);
+      this.updateCurrentTrackDuration(100);
+
+      this.updateUi({loading: false, playing: false, pause: false, stop: true}); // update UI
+
+      // check if continuous playback is true
+      if(this.continuousPlaybackStatus){
+        // check if there's a next track on the playlist
+        if((this.currentTrackId + 1) <= this.lastSongId){
+          // play next song
+          this.updatePlayingStatus(true);  // show player loading animation on UI
+          this.updateCurrentTrackId(this.currentTrackId + 1); // update current track id
+          this.playTrack(); // play audio
+        } else {
+          // play first track
+          this.updatePlayingStatus(true);  // show player loading animation on UI
+          this.updateCurrentTrackId(0); // update current track id
+          this.playTrack(); // play audio
+        }
+      }
+    },
+    updateSongs(songs){
+      this.songs = songs;
+      this.songsCount = songs.length;
+      this.lastSongId = songs.length - 1;
+    },
+    updateContinuousPlaybackStatus(status = !this.continuousPlaybackStatus){
+      this.continuousPlaybackStatus = status;
+    },
+    updateCurrentTrackId(trackId){
+      this.currentTrackId = trackId;
+    },
+    updateCurrentTrackTime(time){
+      this.currentTrackTime = time;
+      this.$emit('playback-timer', {playingItemDuration: this.currentTrackDuration, playingItemTime: this.currentTrackTime});
+    },
+    updateCurrentTrackDuration(time){
+      this.currentTrackDuration = time;
+    },
+    updatePlayerVolume(volume){
+      this.volume = volume;
+      this.audio.volume = this.volume;
+    },
+    updateLoadingStatus(status) {
+      this.playerIsLoading = status;
+    },
+    updatePlayingStatus(status) {
+        this.playerIsPlaying = status;
+    },
+    updatePauseStatus(status) {
+      this.playerIsPaused = status;
+    },
+    updateStopStatus(status) {
+      this.playerIsStopped = status;
+    },
+    playTrack(trackId = this.currentTrackId, skip = false /* next / pevious skips */){
+      if(this.songsCount <= 0){ // play is only functional when there are songs on the playlist
+        return false
+      }
+      let xns = this;
+      // if currentTrackTime is not 0, resume play
+      if(this.playerIsPaused & !skip){
+        this.audio.currentTime = this.currentTrackTime;
+        setTimeout(() => {
+          this.audio.play();
+          xns.audioListening(); // resume listening to audio oject
+        }, 10);
+      } else {
+        // abort current player progress
+        this.audio.load();
+        this.coverColor = this.pickRandomColor(); // assign random cover color
+        
+        this.playerIsLoading = true; // show player loading animation on UI
+
+        this.currentTrackId = trackId; // update current track id
+        this.audio.src = this.songs[trackId].audio;
+        this.audio.play(); // play audio
+        setTimeout(() => {
+          xns.audioListening(); // listen to audio events
+        }, 10);
+      }
+      this.audio.volume = this.volume;
+    },
+    pause(){
+      let xns = this;
+      this.audioListening(false); // stop listening to audio events
+      setTimeout(() => {
+        xns.audio.pause();
+        xns.updateUi({loading: false, playing: false, pause: true, stop: false}); // update UI
+      }, 10);
+    },
+    stop(){
+      let xns = this;
+      xns.audio.load();
+      setTimeout(() => {
+        this.currentTrackTime = 0;
+        this.audio.currentTime = 0;
+        xns.updateUi({loading: false, playing: false, pause: false, stop: true}); // update UI
+        xns.audioListening(false); // stop listening to audio events
+      }, 10);
+    },
+    next(){
+      let xns = this;
+      // check if there's a next track on the playlist
+      if((this.currentTrackId + 1) <= this.lastSongId){
+        // play next song
+        this.currentTrackId += 1;
+        this.audioListening(false); // stop listening to audio events
+        setTimeout(() => {
+          xns.playTrack(this.currentTrackId, true);
+        }, 10);
+      } else {
+        // check if continuous playback is true
+        // TODO convert this, to repeat all check instead
+        if(this.continuousPlaybackStatus){
+          // play first track
+          this.currentTrackId = 0;
+          this.audioListening(false); // stop listening to audio events
+          setTimeout(() => {
+            xns.playTrack(this.currentTrackId, true);
+          }, 10);
+        }
+      }
+    },
+    previous(){
+      let xns = this;
+      // check if there's a previous track on the playlist
+      if((this.currentTrackId - 1) >= 0){
+        // play previous song
+        this.currentTrackId -= 1;
+        this.audioListening(false); // stop listening to audio events
+        setTimeout(() => {
+          xns.playTrack(this.currentTrackId, true);
+        }, 10);
+      } else {
+        // check if continuous playback is true
+        // TODO convert this, to repeat all check instead
+        if(this.continuousPlaybackStatus){
+          // play last song
+          this.currentTrackId = this.lastSongId;
+          this.audioListening(false); // stop listening to audio events
+          setTimeout(() => {
+            xns.playTrack(this.currentTrackId, true);
+          }, 10);
+        }
+      }
+    },
+    seekPlayer(time){
+      let xns = this;
+      this.audioListening(false); // stop listening to audio events
+      this.currentTrackTime = time; // seek to given time
+      this.audio.currentTime = time; // seek to given time
+      setTimeout(() =>{
+          xns.audioListening(); // resume listening to audio oject
+      }, 10);
+    },
+  },
 };
 
 /**
@@ -1671,6 +2141,21 @@ function tryWrap(fn) {
  */
 let currentRenderingInstance = null;
 let currentScopeId = null;
+/**
+ * Set scope id when creating hoisted vnodes.
+ * @private compiler helper
+ */
+function pushScopeId(id) {
+    currentScopeId = id;
+}
+/**
+ * Technically we no longer need this after 3.0.8 but we need to keep the same
+ * API for backwards compat w/ code generated by compilers.
+ * @private
+ */
+function popScopeId() {
+    currentScopeId = null;
+}
 function markAttrsAccessed() {
 }
 
@@ -2052,60 +2537,7 @@ const queuePostRenderEffect = queueEffectWithSuspense
     ;
 
 const isTeleport = (type) => type.__isTeleport;
-
-const COMPONENTS = 'components';
-/**
- * @private
- */
-function resolveComponent(name, maybeSelfReference) {
-    return resolveAsset(COMPONENTS, name, true, maybeSelfReference) || name;
-}
 const NULL_DYNAMIC_COMPONENT = Symbol();
-// implementation
-function resolveAsset(type, name, warnMissing = true, maybeSelfReference = false) {
-    const instance = currentInstance;
-    if (instance) {
-        const Component = instance.type;
-        // explicit self name has highest priority
-        if (type === COMPONENTS) {
-            const selfName = getComponentName(Component);
-            if (selfName &&
-                (selfName === name ||
-                    selfName === camelize(name) ||
-                    selfName === capitalize(camelize(name)))) {
-                return Component;
-            }
-        }
-        const res = 
-        // local registration
-        // check instance[type] first which is resolved for options API
-        resolve(instance[type] || Component[type], name) ||
-            // global registration
-            resolve(instance.appContext[type], name);
-        if (!res && maybeSelfReference) {
-            // fallback to implicit self-reference
-            return Component;
-        }
-        if ((process.env.NODE_ENV !== 'production') && warnMissing && !res) {
-            const extra = type === COMPONENTS
-                ? `\nIf this is a native custom element, make sure to exclude it from ` +
-                    `component resolution via compilerOptions.isCustomElement.`
-                : ``;
-            warn(`Failed to resolve ${type.slice(0, -1)}: ${name}${extra}`);
-        }
-        return res;
-    }
-    else if ((process.env.NODE_ENV !== 'production')) {
-        warn(`resolve${capitalize(type.slice(0, -1))} ` +
-            `can only be used in render() or setup().`);
-    }
-}
-function resolve(registry, name) {
-    return (registry &&
-        (registry[name] ||
-            registry[camelize(name)] ||
-            registry[capitalize(camelize(name))]));
-}
 
 const Fragment = Symbol((process.env.NODE_ENV !== 'production') ? 'Fragment' : undefined);
 const Text = Symbol((process.env.NODE_ENV !== 'production') ? 'Text' : undefined);
@@ -3461,1019 +3893,221 @@ if ((process.env.NODE_ENV !== 'production')) {
     initDev();
 }
 
-const _hoisted_1$c = ["data-title"];
-const _hoisted_2$c = ["width", "height"];
-const _hoisted_3$c = /*#__PURE__*/createBaseVNode("path", { d: "M336.6 157.5L303 124.1c-3.5-3.5-8.5-4.9-13.6-3.6-1.2.3-2.4.8-3.5 1.5-4.7 2.9-7.2 7.8-6.8 13.1.2 3.4 1.9 6.6 4.3 9.1l16 15.9H142c-20.8 0-40.3 8.1-55.1 22.9C72.1 197.7 64 217.2 64 238v16c0 7.7 6.3 14 14 14s14-6.3 14-14v-16c0-13.3 5.2-25.8 14.7-35.3 9.5-9.5 22-14.7 35.3-14.7h155.4l-16 15.9c-2.4 2.4-4 5.4-4.3 8.7-.4 4.2 1.1 8.3 4.1 11.3 2.6 2.6 6.2 4.1 9.9 4.1s7.2-1.4 9.9-4.1l35.6-35.4c4.2-4.1 6.5-9.7 6.5-15.5-.1-5.9-2.4-11.4-6.5-15.5zM434 244c-7.7 0-14 6.3-14 14v16c0 13.3-5.2 25.8-14.7 35.3-9.5 9.5-22 14.7-35.3 14.7H214.6l16-15.9c2.4-2.4 4-5.4 4.3-8.8.4-4.2-1.1-8.3-4.1-11.3-2.6-2.6-6.2-4.1-9.9-4.1s-7.2 1.4-9.9 4.1l-35.6 35.4c-4.2 4.1-6.5 9.7-6.5 15.5 0 5.9 2.3 11.4 6.5 15.5l33.6 33.4c3.5 3.5 8.5 4.9 13.6 3.6 1.2-.3 2.4-.8 3.5-1.5 4.7-2.9 7.2-7.8 6.8-13.1-.2-3.4-1.9-6.6-4.3-9.1l-16-15.9H370c43 0 78-35 78-78v-16c0-7.5-6.3-13.8-14-13.8z" }, null, -1 /* HOISTED */);
-const _hoisted_4$c = [
-  _hoisted_3$c
-];
-
-function render$c(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-repeat-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$c, 8 /* PROPS */, _hoisted_2$c))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$c))
-}
-
-script$c.render = render$c;
-script$c.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-repeat.vue";
-
-var script$b = {
-  name: "ios-skip-backward-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Skip Backward Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$b = ["data-title"];
-const _hoisted_2$b = ["width", "height"];
-const _hoisted_3$b = /*#__PURE__*/createBaseVNode("path", { d: "M175 100v137.8L403.9 98.1c5.3-3.1 12.1.7 12.1 6.9v302c0 6.2-6.7 10-12.1 6.9L175 274.2V412c0 2.2-1.8 4-4 4h-71c-2.2 0-4-1.8-4-4V100c0-2.2 1.8-4 4-4h71c2.2 0 4 1.8 4 4z" }, null, -1 /* HOISTED */);
-const _hoisted_4$b = [
-  _hoisted_3$b
-];
-
-function render$b(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-skip-backward-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$b, 8 /* PROPS */, _hoisted_2$b))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$b))
-}
-
-script$b.render = render$b;
-script$b.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-skip-backward.vue";
-
-var script$a = {
-  name: "ios-play-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Play Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$a = ["data-title"];
-const _hoisted_2$a = ["width", "height"];
-const _hoisted_3$a = /*#__PURE__*/createBaseVNode("path", { d: "M128 104.3v303.4c0 6.4 6.5 10.4 11.7 7.2l240.5-151.7c5.1-3.2 5.1-11.1 0-14.3L139.7 97.2c-5.2-3.3-11.7.7-11.7 7.1z" }, null, -1 /* HOISTED */);
-const _hoisted_4$a = [
-  _hoisted_3$a
-];
-
-function render$a(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-play-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$a, 8 /* PROPS */, _hoisted_2$a))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$a))
-}
-
-script$a.render = render$a;
-script$a.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-play.vue";
-
-var script$9 = {
-  name: "ios-pause-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Pause Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$9 = ["data-title"];
-const _hoisted_2$9 = ["width", "height"];
-const _hoisted_3$9 = /*#__PURE__*/createBaseVNode("path", { d: "M199.9 416h-63.8c-4.5 0-8.1-3.6-8.1-8V104c0-4.4 3.6-8 8.1-8h63.8c4.5 0 8.1 3.6 8.1 8v304c0 4.4-3.6 8-8.1 8zM375.9 416h-63.8c-4.5 0-8.1-3.6-8.1-8V104c0-4.4 3.6-8 8.1-8h63.8c4.5 0 8.1 3.6 8.1 8v304c0 4.4-3.6 8-8.1 8z" }, null, -1 /* HOISTED */);
-const _hoisted_4$9 = [
-  _hoisted_3$9
-];
-
-function render$9(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-pause-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$9, 8 /* PROPS */, _hoisted_2$9))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$9))
-}
-
-script$9.render = render$9;
-script$9.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-pause.vue";
-
-var script$8 = {
-  name: "ios-square-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Square Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$8 = ["data-title"];
-const _hoisted_2$8 = ["width", "height"];
-const _hoisted_3$8 = /*#__PURE__*/createBaseVNode("path", { d: "M388 416H124c-15.4 0-28-12.6-28-28V124c0-15.4 12.6-28 28-28h264c15.4 0 28 12.6 28 28v264c0 15.4-12.6 28-28 28z" }, null, -1 /* HOISTED */);
-const _hoisted_4$8 = [
-  _hoisted_3$8
-];
-
-function render$8(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-square-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$8, 8 /* PROPS */, _hoisted_2$8))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$8))
-}
-
-script$8.render = render$8;
-script$8.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-square.vue";
-
-var script$7 = {
-  name: "ios-skip-forward-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Skip Forward Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$7 = ["data-title"];
-const _hoisted_2$7 = ["width", "height"];
-const _hoisted_3$7 = /*#__PURE__*/createBaseVNode("path", { d: "M337 100v137.8L108.1 98.1C102.7 95 96 98.8 96 105v302c0 6.2 6.7 10 12.1 6.9L337 274.2V412c0 2.2 1.8 4 4 4h71c2.2 0 4-1.8 4-4V100c0-2.2-1.8-4-4-4h-71c-2.2 0-4 1.8-4 4z" }, null, -1 /* HOISTED */);
-const _hoisted_4$7 = [
-  _hoisted_3$7
-];
-
-function render$7(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-skip-forward-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$7, 8 /* PROPS */, _hoisted_2$7))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$7))
-}
-
-script$7.render = render$7;
-script$7.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-skip-forward.vue";
-
-var script$6 = {
-  name: "ios-more-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios More Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$6 = ["data-title"];
-const _hoisted_2$6 = ["width", "height"];
-const _hoisted_3$6 = /*#__PURE__*/createBaseVNode("path", { d: "M255.8 218c-21 0-38 17-38 38s17 38 38 38 38-17 38-38-17-38-38-38zM102 218c-21 0-38 17-38 38s17 38 38 38 38-17 38-38-17-38-38-38zM410 218c-21 0-38 17-38 38s17 38 38 38 38-17 38-38-17-38-38-38z" }, null, -1 /* HOISTED */);
-const _hoisted_4$6 = [
-  _hoisted_3$6
-];
-
-function render$6(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-more-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$6, 8 /* PROPS */, _hoisted_2$6))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$6))
-}
-
-script$6.render = render$6;
-script$6.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-more.vue";
-
-var script$5 = {
-  name: "ios-add-circle-outline-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Add Circle Outline Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$5 = ["data-title"];
-const _hoisted_2$5 = ["width", "height"];
-const _hoisted_3$5 = /*#__PURE__*/createBaseVNode("path", { d: "M346.5 240H272v-74.5c0-8.8-7.2-16-16-16s-16 7.2-16 16V240h-74.5c-8.8 0-16 6-16 16s7.5 16 16 16H240v74.5c0 9.5 7 16 16 16s16-7.2 16-16V272h74.5c8.8 0 16-7.2 16-16s-7.2-16-16-16z" }, null, -1 /* HOISTED */);
-const _hoisted_4$5 = /*#__PURE__*/createBaseVNode("path", { d: "M256 76c48.1 0 93.3 18.7 127.3 52.7S436 207.9 436 256s-18.7 93.3-52.7 127.3S304.1 436 256 436c-48.1 0-93.3-18.7-127.3-52.7S76 304.1 76 256s18.7-93.3 52.7-127.3S207.9 76 256 76m0-28C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48z" }, null, -1 /* HOISTED */);
-const _hoisted_5$2 = [
-  _hoisted_3$5,
-  _hoisted_4$5
-];
-
-function render$5(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-add-circle-outline-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_5$2, 8 /* PROPS */, _hoisted_2$5))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$5))
-}
-
-script$5.render = render$5;
-script$5.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-add-circle-outline.vue";
-
-var script$4 = {
-  name: "ios-add-circle-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Add Circle Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$4 = ["data-title"];
-const _hoisted_2$4 = ["width", "height"];
-const _hoisted_3$4 = /*#__PURE__*/createBaseVNode("path", { d: "M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm90.5 224H272v74.5c0 8.8-7.2 16-16 16-4.4 0-8.4-1.8-11.3-4.7-2.9-2.9-4.7-6.9-4.7-11.3V272h-74.5c-4.4 0-8.4-1.8-11.3-4.7-2.9-2.9-4.7-6.9-4.7-11.3 0-8.8 7.2-16 16-16H240v-74.5c0-8.8 7.2-16 16-16s16 7.2 16 16V240h74.5c8.8 0 16 7.2 16 16s-7.2 16-16 16z" }, null, -1 /* HOISTED */);
-const _hoisted_4$4 = [
-  _hoisted_3$4
-];
-
-function render$4(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-add-circle-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$4, 8 /* PROPS */, _hoisted_2$4))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$4))
-}
-
-script$4.render = render$4;
-script$4.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-add-circle.vue";
-
-var script$3 = {
-  name: "ios-remove-circle-outline-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Remove Circle Outline Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$3 = ["data-title"];
-const _hoisted_2$3 = ["width", "height"];
-const _hoisted_3$3 = /*#__PURE__*/createBaseVNode("path", { d: "M346.5 240h-181c-8.8 0-16 6-16 16s7.5 16 16 16h181c8.8 0 16-7.2 16-16s-7.2-16-16-16z" }, null, -1 /* HOISTED */);
-const _hoisted_4$3 = /*#__PURE__*/createBaseVNode("path", { d: "M256 76c48.1 0 93.3 18.7 127.3 52.7S436 207.9 436 256s-18.7 93.3-52.7 127.3S304.1 436 256 436c-48.1 0-93.3-18.7-127.3-52.7S76 304.1 76 256s18.7-93.3 52.7-127.3S207.9 76 256 76m0-28C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48z" }, null, -1 /* HOISTED */);
-const _hoisted_5$1 = [
-  _hoisted_3$3,
-  _hoisted_4$3
-];
-
-function render$3(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-remove-circle-outline-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_5$1, 8 /* PROPS */, _hoisted_2$3))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$3))
-}
-
-script$3.render = render$3;
-script$3.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-remove-circle-outline.vue";
-
-var script$2 = {
-  name: "ios-remove-circle-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Remove Circle Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$2 = ["data-title"];
-const _hoisted_2$2 = ["width", "height"];
-const _hoisted_3$2 = /*#__PURE__*/createBaseVNode("path", { d: "M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm90.5 224h-181c-8.5 0-16-6-16-16s7.2-16 16-16h181c8.8 0 16 7.2 16 16s-7.2 16-16 16z" }, null, -1 /* HOISTED */);
-const _hoisted_4$2 = [
-  _hoisted_3$2
-];
-
-function render$2(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-remove-circle-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$2, 8 /* PROPS */, _hoisted_2$2))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$2))
-}
-
-script$2.render = render$2;
-script$2.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-remove-circle.vue";
-
-var script$1 = {
-  name: "ios-musical-note-icon",
-  mixins: [
-    IoniconsMixin
-  ],
-  data () {
-    let iconTitle = this.title ? this.title : "Ios Musical Note Icon";
-    return {
-      iconTitle: iconTitle
-    }
-  }
-};
-
-const _hoisted_1$1 = ["data-title"];
-const _hoisted_2$1 = ["width", "height"];
-const _hoisted_3$1 = /*#__PURE__*/createBaseVNode("path", { d: "M364.3 48.2c-4.7.9-118 24.1-122.2 24.9-4.2.8-8.1 3.6-8.1 8v255.1c0 1.6-.1 7.2-2.4 11.7-3.1 5.9-8.5 10.2-16.1 12.7-3.3 1.1-7.8 2.1-13.1 3.3-24.1 5.4-64.4 14.6-64.4 51.8 0 30.1 21.7 44.5 35 47.1 5 1 11 1 13.8 1 8.2 0 36-3.3 51.2-13.2 11-7.2 24.1-21.4 24.1-47.8V173.1c0-3.8 2.7-7.1 6.4-7.8l92.8-19c7.4-1.5 12.8-8.1 12.8-15.7V55.8c-.1-4.3-3.8-8.8-9.8-7.6z" }, null, -1 /* HOISTED */);
-const _hoisted_4$1 = [
-  _hoisted_3$1
-];
-
-function render$1(_ctx, _cache, $props, $setup, $data, $options) {
-  return (openBlock(), createElementBlock("div", {
-    class: normalizeClass(["ion", _ctx.ionClass]),
-    "data-title": $data.iconTitle,
-    "data-name": "ios-musical-note-icon"
-  }, [
-    (openBlock(), createElementBlock("svg", {
-      width: _ctx.w,
-      height: _ctx.h,
-      class: "ion__svg",
-      viewBox: "0 0 512 512"
-    }, _hoisted_4$1, 8 /* PROPS */, _hoisted_2$1))
-  ], 10 /* CLASS, PROPS */, _hoisted_1$1))
-}
-
-script$1.render = render$1;
-script$1.__file = "node_modules/.pnpm/vue-ionicons@3.0.5/node_modules/vue-ionicons/dist/ios-musical-note.vue";
-
-var script = {
-  name: 'XnsAudioPlayerSimple',
-  components: {
-    RepeatIcon: script$c, SkipBackwardIcon: script$b, PlayIcon: script$a, PauseIcon: script$9, SquareIcon: script$8, SkipForwardIcon: script$7, BufferingIcon: script$6, VolumeAddIcon: script$4, VolumeReduceIcon: script$2, VolumeReduceIconInactive: script$3, VolumeAddIconInactive: script$5, MusicalNoteIcon: script$1
-  },
-  props: {
-    playlist: {
-      type: Array,
-      default: () => []
-    },
-    playerWidth: {
-      type: Number,
-      default: 0
-    },
-    repeatAll: {
-      type: Boolean,
-      default: false
-    },
-    playerVolume: {
-      type: Number,
-      default: 0.5
-    },
-    stopPlayback: {
-      type: Boolean,
-      default: false
-    },
-    pausePlayback: {
-      type: Boolean,
-      default: false
-    },
-    showAudioDuration: {
-      type: Boolean,
-      default: true
-    },
-    showAudioData: {
-      type: Boolean,
-      default: true
-    },
-    progressBarColor: {
-      type: String,
-      default: '#008080'
-    },
-
-    // progress bar
-    progressBarListen: {
-      type: Boolean,
-      default: true
-    },
-    progressBarHeight: {
-      type: Number,
-      default: 20
-    },
-    progressBarShadeColor: {
-      type: String,
-      default: '#e1e1e1'
-    },
-    progressBarColorIntensity: {
-      type: Number,
-      default: 0.5
-    }
-  },
-  data(){
-    return {
-      // player details
-      localPlayerWidth: 0,
-      localProgressBarColor: '',
-
-      // audio tracks list
-      songs: [],
-      songsCount: 0,
-
-      //bools - playback helpers
-      playerIsPlaying: false,
-      playerIsPaused: false,
-      playerIsStopped: false,
-      isFirstTrack: true,
-      isMuted: false,
-      playerIsLoading: false,
-      continuousPlaybackStatus: false,
-
-      // player element
-      audio: new Audio(),
-
-      // player properties
-      volume: 0.5,
-      buffered: 0,
-
-      // custom helper properties
-      currentTrackId: 0,
-      currentTrackTime: 0,
-      currentTrackDuration: 0,
-      lastSongId: 0,
-
-      // cover art colors
-      coverColors: [ '#009688', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#4caf50', '#ff9800', '#607d8b', '#795548', '#008080' ],
-      coverColor: '',
-
-
-      // progress bar
-      progress: 0, // % of currentTrackDuration
-      progressBarTotalWidth: 0
-    }
-  },
-  watch: {
-    playerVolume () {
-      this.updatePlayerVolume(this.playerVolume);
-    },
-    repeatAll(){
-      this.updateContinuousPlaybackStatus(this.repeatAll);
-    },
-    playlist(){
-      this.updateSongs(this.playlist);
-    },
-    // let user programatically stop playback
-    stopPlayback(){
-      if(this.stopPlayback){
-        this.stop();
-      }
-    },
-    // let user programatically pause playback
-    pausePlayback(){
-      if(this.pausePlayback){
-        this.pause();
-      }
-    },
-    // observe player width adjustment
-    playerWidth(){
-      this.adjustPlayerDimensions(this.playerWidth);
-    },
-    // observe changes on the progress-bar color
-    progressBarColor(){
-      this.validateProgressColor(this.progressBarColor); // validate progressBarColor
-    },
-
-    // progress bar
-    currentTrackTime() {
-      this.calibrateProgress(this.currentTrackTime);
-    },
-    currentTrackDuration(){
-      this.calibrateProgress(this.currentTrackTime, this.currentTrackDuration);
-    },
-    progressBarListen(){
-      this.listenToEvents(this.progressBarListen);
-    },
-    progressBarColorIntensity(){
-      this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity);
-    },
-  },
-  computed: {
-    currentTrackTimeOutput () {
-      if(isNaN(this.currentTrackTime)){
-        return '00'
-      }else {
-        if(this.currentTrackTime < 60){
-          return this.currentTrackTime.toFixed() < 10 ? '0 : 0' + this.currentTrackTime.toFixed() : '0 : ' + this.currentTrackTime.toFixed()
-        } else {
-          let seconds = (this.currentTrackTime.toFixed() % 60) == 60 ? '00' : (this.currentTrackTime % 60).toFixed();
-          let minutes = Math.floor(this.currentTrackTime.toFixed()/60).toFixed();
-          return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
-        }
-      }
-    },
-    currentTrackDurationOutput () {
-      if(isNaN(this.currentTrackDuration)){
-        return '00'
-      }else {
-        if(this.currentTrackDuration < 60){
-          return this.currentTrackDuration.toFixed() < 10 ? '0 : 0' + this.currentTrackDuration.toFixed() : '0 : ' + this.currentTrackDuration.toFixed()
-        } else {
-          let seconds = (this.currentTrackDuration.toFixed() % 60) == 60 ? '00' : (this.currentTrackDuration % 60).toFixed();
-          let minutes = Math.floor(this.currentTrackDuration.toFixed()/60).toFixed();
-          return minutes + ' : ' + (seconds < 10 ? '0' + seconds : seconds)
-        }
-      }
-    },
-  },
-  mounted () {
-    let xns = this;
-    this.songs = this.playlist;
-    setTimeout(function () {
-      xns.coverColor = xns.pickRandomColor(); // assign random color
-      xns.lastSongId = xns.songs.length - 1;
-      xns.updatePlayerVolume(xns.playerVolume);
-      xns.updateContinuousPlaybackStatus(xns.repeatAll);
-      xns.adjustPlayerDimensions(xns.playerWidth);
-      xns.updateSongs(xns.playlist);
-      xns.validateProgressColor(xns.progressBarColor);
-    }, 300);
-    this.audio.volume = this.volume;
-
-
-    // progress bar
-    // calibrate progress
-    this.calibrateProgress(this.currentTrackTime, this.currentTrackDuration);
-
-    // set seek bar color
-    this.hexOpacity(this.progressBarColor, this.progressBarColorIntensity);
-
-    // start listening to taps and clicks
-    this.listenToEvents(this.progressBarListen);
-
-    // recalibrate progress width on window width resize
-    window.addEventListener('resize', this.windowResize, false);
-  },
-  methods: {
-    // progress bar
-    getClickPosition(el){
-
-      el = el || window.event;
-
-      // get target element
-      let targ = el.target || el.srcElement;
-      if (targ.nodeType == 3) targ = targ.parentNode; // defeat Safari bug
-      this.progressBarTotalWidth = this.progressBarTotalWidth || targ.offsetWidth; // set initial progressbar width
-      let seekWidth = el.offsetX;
-
-      //change seek position
-      this.progress = (seekWidth / this.progressBarTotalWidth) *100;
-
-      // convert seeked posiion(%) to value
-      let trackTime = (this.progress / 100) * this.currentTrackDuration;
-
-      // emit seeked value
-      this.seekPlayer(trackTime);
-    },
-    detectMouseDown(e){
-      e.preventDefault(); // prevent browser from moving objects, following links etc
-
-      // start listening to mouse movements
-      this.$refs.trackprogress.addEventListener("mousemove", this.getClickPosition, false);
-    },
-    detectMouseUp(){
-      // stop listening to mouse movements
-      this.$refs.trackprogress.removeEventListener("mousemove", this.getClickPosition, false);
-    },
-    windowResize(){
-      setTimeout(()=>{
-        this.progressBarTotalWidth = this.$refs.trackprogress.offsetWidth;
-      }, 200);
-    },
-    listenToEvents(listen = true){
-      if (listen){
-        this.$refs.trackprogress.addEventListener("click", this.getClickPosition, false);
-        this.$refs.trackprogress.addEventListener("mousedown", this.detectMouseDown, false);
-        this.$refs.trackprogress.addEventListener("mouseup", this.detectMouseUp, false);
-      }
-      else {
-        this.$refs.trackprogress.removeEventListener("click", this.getClickPosition, false);
-        this.$refs.trackprogress.removeEventListener("mousedown", this.detectMouseDown, false);
-        this.$refs.trackprogress.removeEventListener("mouseup", this.detectMouseUp, false);
-      }
-    },
-
-    // calibrate progress
-    calibrateProgress(currentVal = this.currentTrackTime, totalVal = this.currentTrackDuration){
-      let max = ((currentVal / totalVal) *100);
-      this.progress = max <= 100 ? max : 100;
-    },
-
-    // apply opacity to color
-    hexOpacity(hex, opacity){
-      let op = ((opacity + this.volume) * 100) <= 99 ? ((opacity + this.volume) * 100) : 99;
-      this.localProgressBarColor = `${hex}`+op;
-    },
-
-    adjustPlayerDimensions(width){
-      this.localPlayerWidth = ((width < 320) && (width !== 0)) ? 320 : width;
-    },
-    validateProgressColor(color){
-      this.localProgressBarColor = (this.coverColors.indexOf(color) !== -1) ? color : '#008080';
-      this.hexOpacity(this.localProgressBarColor, this.progressBarColorIntensity); // apply intensity to progressBarColor
-    },
-    pickRandomColor(){
-      return this.coverColors[Math.floor(Math.random() * this.coverColors.length)];
-    },
-
-    // check player width
-    checkPlayerWidth(val){
-      return ((this.localPlayerWidth >= val) || (this.localPlayerWidth === 0))
-    },
-
-    emitPlayerStatus(status){
-      let  xns = this;
-      setTimeout(()=>{
-        xns.$emit('player-status', status);
-      }, 200);
-    },
-    decreaseVolume(){
-      this.updatePlayerVolume((this.volume - 0.1) >= 0 ? (this.volume - 0.1) : 0);
-    },
-    increaseVolume(){
-      this.updatePlayerVolume((this.volume + 0.1) <= 1 ? (this.volume + 0.1) : 1);
-    },
-    audioListening(listen = true){
-
-      if(listen){
-        // start listening
-        this.audio.addEventListener('loadeddata', this.proccessPlaybackStart, false);
-        this.audio.addEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
-        this.audio.addEventListener('pause', this.proccessPlaybackPause, false);
-        this.audio.addEventListener('emptied', this.proccessPlaybackEmptied, false);
-        this.audio.addEventListener('ended', this.proccessPlaybackStop, false);
-      } else {
-        // stop listening
-        this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false);
-        this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
-        this.audio.removeEventListener('pause', this.proccessPlaybackPause, false);
-        this.audio.removeEventListener('emptied', this.proccessPlaybackEmptied, false);
-        this.audio.removeEventListener('ended', this.proccessPlaybackStop, false);
-      }
-    },
-    updateUi(status){
-      this.updateLoadingStatus(status.loading);
-      this.updatePlayingStatus(status.playing);
-      this.updatePauseStatus(status.pause);
-      this.updateStopStatus(status.stop);
-    },
-
-    // when first frame of media has finished loading
-    proccessPlaybackStart() {
-      this.updateUi({loading: false, playing: true, pause: false, stop: false}); // update UI
-      this.updateCurrentTrackDuration(this.audio.duration); // get track duration
-      this.emitPlayerStatus('playing');
-    },
-
-    // when time indicated by the currentTime attribute has been updated
-    proccessPlaybackTimeUpdate() {
-      // check if track duration is NaN or zero and rectify
-      if(isNaN(this.currentTrackDuration) || !isFinite(this.currentTrackDuration)){
-        this.updateCurrentTrackDuration(260); // give reasonable track duration
-      }  else {
-        this.updateCurrentTrackDuration((isNaN(this.audio.duration) || !isFinite(this.audio.duration)) ? 260 : this.audio.duration); // get track duration
-      }
-      // debug loading
-      if(this.playerIsLoading){
-        this.updateLoadingStatus(false);
-      }
-
-      this.updateCurrentTrackTime(this.audio.currentTime); // get current track time
-      this.updateUi({loading: false, playing: true, pause: false, stop: false}); // update UI
-    },
-
-    // called when element is paused
-    proccessPlaybackPause() {
-      this.updateUi({loading: false, playing: false, pause: true, stop: false}); // update UI
-      this.emitPlayerStatus('paused');
-    },
-
-    // called when loaded() is called
-    proccessPlaybackEmptied() {
-      // kill all event listeners
-      this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false);
-      this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
-      this.audio.removeEventListener('pause', this.proccessPlaybackEmptied, false);
-      // update times
-      this.updateCurrentTrackTime(0);
-      this.updateCurrentTrackDuration(100);
-
-      this.updateUi({loading: false, playing: false, pause: false, stop: true}); // update UI
-      this.emitPlayerStatus('stopped');
-    },
-
-    // when playback stops at the end of the media
-    proccessPlaybackStop() {
-      this.emitPlayerStatus('stopped');
-      // kill all event listeners
-      this.audio.removeEventListener('loadeddata', this.proccessPlaybackStart, false);
-      this.audio.removeEventListener('timeupdate', this.proccessPlaybackTimeUpdate, false);
-      this.audio.removeEventListener('pause', this.proccessPlaybackPause, false);
-      // update times
-      this.updateCurrentTrackTime(0);
-      this.updateCurrentTrackDuration(100);
-
-      this.updateUi({loading: false, playing: false, pause: false, stop: true}); // update UI
-
-      // check if continuous playback is true
-      if(this.continuousPlaybackStatus){
-        // check if there's a next track on the playlist
-        if((this.currentTrackId + 1) <= this.lastSongId){
-          // play next song
-          this.updatePlayingStatus(true);  // show player loading animation on UI
-          this.updateCurrentTrackId(this.currentTrackId + 1); // update current track id
-          this.playTrack(); // play audio
-        } else {
-          // play first track
-          this.updatePlayingStatus(true);  // show player loading animation on UI
-          this.updateCurrentTrackId(0); // update current track id
-          this.playTrack(); // play audio
-        }
-      }
-    },
-    updateSongs(songs){
-      this.songs = songs;
-      this.songsCount = songs.length;
-      this.lastSongId = songs.length - 1;
-    },
-    updateContinuousPlaybackStatus(status = !this.continuousPlaybackStatus){
-      this.continuousPlaybackStatus = status;
-    },
-    updateCurrentTrackId(trackId){
-      this.currentTrackId = trackId;
-    },
-    updateCurrentTrackTime(time){
-      this.currentTrackTime = time;
-      this.$emit('playback-timer', {playingItemDuration: this.currentTrackDuration, playingItemTime: this.currentTrackTime});
-    },
-    updateCurrentTrackDuration(time){
-      this.currentTrackDuration = time;
-    },
-    updatePlayerVolume(volume){
-      this.volume = volume;
-      this.audio.volume = this.volume;
-    },
-    updateLoadingStatus(status) {
-      this.playerIsLoading = status;
-    },
-    updatePlayingStatus(status) {
-        this.playerIsPlaying = status;
-    },
-    updatePauseStatus(status) {
-      this.playerIsPaused = status;
-    },
-    updateStopStatus(status) {
-      this.playerIsStopped = status;
-    },
-    playTrack(trackId = this.currentTrackId, skip = false /* next / pevious skips */){
-      if(this.songsCount <= 0){ // play is only functional when there are songs on the playlist
-        return false
-      }
-      let xns = this;
-      // if currentTrackTime is not 0, resume play
-      if(this.playerIsPaused & !skip){
-        this.audio.currentTime = this.currentTrackTime;
-        setTimeout(() => {
-          this.audio.play();
-          xns.audioListening(); // resume listening to audio oject
-        }, 10);
-      } else {
-        // abort current player progress
-        this.audio.load();
-        this.coverColor = this.pickRandomColor(); // assign random cover color
-        
-        this.playerIsLoading = true; // show player loading animation on UI
-
-        this.currentTrackId = trackId; // update current track id
-        this.audio.src = this.songs[trackId].audio;
-        this.audio.play(); // play audio
-        setTimeout(() => {
-          xns.audioListening(); // listen to audio events
-        }, 10);
-      }
-      this.audio.volume = this.volume;
-    },
-    pause(){
-      let xns = this;
-      this.audioListening(false); // stop listening to audio events
-      setTimeout(() => {
-        xns.audio.pause();
-        xns.updateUi({loading: false, playing: false, pause: true, stop: false}); // update UI
-      }, 10);
-    },
-    stop(){
-      let xns = this;
-      xns.audio.load();
-      setTimeout(() => {
-        this.currentTrackTime = 0;
-        this.audio.currentTime = 0;
-        xns.updateUi({loading: false, playing: false, pause: false, stop: true}); // update UI
-        xns.audioListening(false); // stop listening to audio events
-      }, 10);
-    },
-    next(){
-      let xns = this;
-      // check if there's a next track on the playlist
-      if((this.currentTrackId + 1) <= this.lastSongId){
-        // play next song
-        this.currentTrackId += 1;
-        this.audioListening(false); // stop listening to audio events
-        setTimeout(() => {
-          xns.playTrack(this.currentTrackId, true);
-        }, 10);
-      } else {
-        // check if continuous playback is true
-        // TODO convert this, to repeat all check instead
-        if(this.continuousPlaybackStatus){
-          // play first track
-          this.currentTrackId = 0;
-          this.audioListening(false); // stop listening to audio events
-          setTimeout(() => {
-            xns.playTrack(this.currentTrackId, true);
-          }, 10);
-        }
-      }
-    },
-    previous(){
-      let xns = this;
-      // check if there's a previous track on the playlist
-      if((this.currentTrackId - 1) >= 0){
-        // play previous song
-        this.currentTrackId -= 1;
-        this.audioListening(false); // stop listening to audio events
-        setTimeout(() => {
-          xns.playTrack(this.currentTrackId, true);
-        }, 10);
-      } else {
-        // check if continuous playback is true
-        // TODO convert this, to repeat all check instead
-        if(this.continuousPlaybackStatus){
-          // play last song
-          this.currentTrackId = this.lastSongId;
-          this.audioListening(false); // stop listening to audio events
-          setTimeout(() => {
-            xns.playTrack(this.currentTrackId, true);
-          }, 10);
-        }
-      }
-    },
-    seekPlayer(time){
-      let xns = this;
-      this.audioListening(false); // stop listening to audio events
-      this.currentTrackTime = time; // seek to given time
-      this.audio.currentTime = time; // seek to given time
-      setTimeout(() =>{
-          xns.audioListening(); // resume listening to audio oject
-      }, 10);
-    },
-  },
-};
-
+const _withScopeId = n => (pushScopeId("data-v-49a309a5"),n=n(),popScopeId(),n);
 const _hoisted_1 = { class: "tw-flex tw-flex-row tw-w-full tw-items-center tw-justify-between" };
 const _hoisted_2 = ["title"];
 const _hoisted_3 = ["src"];
-const _hoisted_4 = { class: "tw-inline-flex tw-flex-grow tw-flex-col tw-items-center tw-w-full" };
-const _hoisted_5 = { class: "tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-align-middle tw-justify-between tw-p-l-3 tw-p-r-1 tw-py-1" };
-const _hoisted_6 = { class: "tw-inline-flex tw-flex-row tw-justify-start" };
-const _hoisted_7 = { class: "tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" };
-const _hoisted_8 = ["disabled"];
-const _hoisted_9 = ["disabled"];
-const _hoisted_10 = ["disabled"];
-const _hoisted_11 = {
+const _hoisted_4 = {
+  key: 1,
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons tw-h-full tw-w-auto",
+  width: "40",
+  height: "40"
+};
+const _hoisted_5 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_6 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M12 13.535V3h8v3h-6v11a4 4 0 1 1-2-3.465z" }, null, -1 /* HOISTED */));
+const _hoisted_7 = [
+  _hoisted_5,
+  _hoisted_6
+];
+const _hoisted_8 = { class: "tw-inline-flex tw-flex-grow tw-flex-col tw-items-center tw-w-full" };
+const _hoisted_9 = { class: "tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-align-middle tw-justify-between tw-p-l-3 tw-p-r-1 tw-py-1" };
+const _hoisted_10 = { class: "tw-inline-flex tw-flex-row tw-justify-start" };
+const _hoisted_11 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+}, [
+  /*#__PURE__*/createBaseVNode("path", {
+    fill: "none",
+    d: "M0 0h24v24H0z"
+  }),
+  /*#__PURE__*/createBaseVNode("path", { d: "M8 11.333l10.223-6.815a.5.5 0 0 1 .777.416v14.132a.5.5 0 0 1-.777.416L8 12.667V19a1 1 0 0 1-2 0V5a1 1 0 1 1 2 0v6.333z" })
+], -1 /* HOISTED */));
+const _hoisted_12 = [
+  _hoisted_11
+];
+const _hoisted_13 = { class: "tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" };
+const _hoisted_14 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  width: "30",
+  height: "30",
+  class: "pp-icons tw-cursor-pointer tw-text-white"
+}, [
+  /*#__PURE__*/createBaseVNode("path", {
+    fill: "none",
+    d: "M0 0h24v24H0z"
+  }),
+  /*#__PURE__*/createBaseVNode("path", { d: "M19.376 12.416L8.777 19.482A.5.5 0 0 1 8 19.066V4.934a.5.5 0 0 1 .777-.416l10.599 7.066a.5.5 0 0 1 0 .832z" })
+], -1 /* HOISTED */));
+const _hoisted_15 = [
+  _hoisted_14
+];
+const _hoisted_16 = ["disabled"];
+const _hoisted_17 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+}, [
+  /*#__PURE__*/createBaseVNode("path", {
+    fill: "none",
+    d: "M0 0h24v24H0z"
+  }),
+  /*#__PURE__*/createBaseVNode("path", { d: "M6 5h2v14H6V5zm10 0h2v14h-2V5z" })
+], -1 /* HOISTED */));
+const _hoisted_18 = [
+  _hoisted_17
+];
+const _hoisted_19 = {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-text-white tw-cursor-pointer pp-icons beat",
+  width: "30",
+  height: "30"
+};
+const _hoisted_20 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_21 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M5 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm14 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-7 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" }, null, -1 /* HOISTED */));
+const _hoisted_22 = [
+  _hoisted_20,
+  _hoisted_21
+];
+const _hoisted_23 = ["disabled"];
+const _hoisted_24 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  width: "30",
+  height: "30",
+  class: "tw-cursor-pointer tw-text-white pp-icons"
+}, [
+  /*#__PURE__*/createBaseVNode("path", {
+    fill: "none",
+    d: "M0 0h24v24H0z"
+  }),
+  /*#__PURE__*/createBaseVNode("path", { d: "M6 5h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" })
+], -1 /* HOISTED */));
+const _hoisted_25 = [
+  _hoisted_24
+];
+const _hoisted_26 = ["disabled"];
+const _hoisted_27 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("svg", {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+}, [
+  /*#__PURE__*/createBaseVNode("path", {
+    fill: "none",
+    d: "M0 0h24v24H0z"
+  }),
+  /*#__PURE__*/createBaseVNode("path", { d: "M16 12.667L5.777 19.482A.5.5 0 0 1 5 19.066V4.934a.5.5 0 0 1 .777-.416L16 11.333V5a1 1 0 0 1 2 0v14a1 1 0 0 1-2 0v-6.333z" })
+], -1 /* HOISTED */));
+const _hoisted_28 = [
+  _hoisted_27
+];
+const _hoisted_29 = {
   key: 0,
   class: "tw-inline-flex tw-flex-row tw-justify-start tw-text-white tw-truncate"
 };
-const _hoisted_12 = { class: "tw-inline-flex tw-flex-row tw-justify-end" };
-const _hoisted_13 = {
+const _hoisted_30 = { class: "tw-inline-flex tw-flex-row tw-justify-end" };
+const _hoisted_31 = {
   key: 0,
   class: "tw-inline-flex tw-flex-row tw-justify-end tw-text-white timer"
 };
-const _hoisted_14 = { class: "tw-flex-1 tw-mx-1" };
-const _hoisted_15 = ["disabled"];
-const _hoisted_16 = ["disabled"];
+const _hoisted_32 = { class: "tw-flex-1 tw-mx-1" };
+const _hoisted_33 = ["disabled"];
+const _hoisted_34 = {
+  key: 0,
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+};
+const _hoisted_35 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_36 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zM7 11v2h10v-2H7z" }, null, -1 /* HOISTED */));
+const _hoisted_37 = [
+  _hoisted_35,
+  _hoisted_36
+];
+const _hoisted_38 = {
+  key: 1,
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+};
+const _hoisted_39 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_40 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-5-9h10v2H7v-2z" }, null, -1 /* HOISTED */));
+const _hoisted_41 = [
+  _hoisted_39,
+  _hoisted_40
+];
+const _hoisted_42 = ["disabled"];
+const _hoisted_43 = {
+  key: 0,
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+};
+const _hoisted_44 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_45 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11H7v2h4v4h2v-4h4v-2h-4V7h-2v4z" }, null, -1 /* HOISTED */));
+const _hoisted_46 = [
+  _hoisted_44,
+  _hoisted_45
+];
+const _hoisted_47 = {
+  key: 1,
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  class: "tw-cursor-pointer tw-text-white pp-icons",
+  width: "30",
+  height: "30"
+};
+const _hoisted_48 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_49 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M11 11V7h2v4h4v2h-4v4h-2v-4H7v-2h4zm1 11C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" }, null, -1 /* HOISTED */));
+const _hoisted_50 = [
+  _hoisted_48,
+  _hoisted_49
+];
+const _hoisted_51 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", {
+  fill: "none",
+  d: "M0 0h24v24H0z"
+}, null, -1 /* HOISTED */));
+const _hoisted_52 = /*#__PURE__*/ _withScopeId(() => /*#__PURE__*/createBaseVNode("path", { d: "M8 20v1.932a.5.5 0 0 1-.82.385l-4.12-3.433A.5.5 0 0 1 3.382 18H18a2 2 0 0 0 2-2V8h2v8a4 4 0 0 1-4 4H8zm8-16V2.068a.5.5 0 0 1 .82-.385l4.12 3.433a.5.5 0 0 1-.321.884H6a2 2 0 0 0-2 2v8H2V8a4 4 0 0 1 4-4h10z" }, null, -1 /* HOISTED */));
+const _hoisted_53 = [
+  _hoisted_51,
+  _hoisted_52
+];
 
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  const _component_MusicalNoteIcon = resolveComponent("MusicalNoteIcon");
-  const _component_SkipBackwardIcon = resolveComponent("SkipBackwardIcon");
-  const _component_PlayIcon = resolveComponent("PlayIcon");
-  const _component_PauseIcon = resolveComponent("PauseIcon");
-  const _component_BufferingIcon = resolveComponent("BufferingIcon");
-  const _component_SquareIcon = resolveComponent("SquareIcon");
-  const _component_SkipForwardIcon = resolveComponent("SkipForwardIcon");
-  const _component_VolumeReduceIcon = resolveComponent("VolumeReduceIcon");
-  const _component_VolumeReduceIconInactive = resolveComponent("VolumeReduceIconInactive");
-  const _component_VolumeAddIcon = resolveComponent("VolumeAddIcon");
-  const _component_VolumeAddIconInactive = resolveComponent("VolumeAddIconInactive");
-  const _component_RepeatIcon = resolveComponent("RepeatIcon");
-
   return (openBlock(), createElementBlock("div", null, [
     createBaseVNode("div", {
       class: "tw-flex tw-flex-row tw-flex-wrap tw-z-20 tw-min-h-10 tw-max-h-simplePlyrmaxheightsm tw-py-0 tw-px-0 tw-mt-0 tw-mr-0 tw-mb-0 tw-ml-0 tw-bg-no-repeat tw-bg-center tw-bg-cover pp",
@@ -4505,65 +4139,32 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
                 class: "tw-h-auto tw-w-full",
                 src: $data.songs[$data.currentTrackId].cover
               }, null, 8 /* PROPS */, _hoisted_3))
-            : (openBlock(), createBlock(_component_MusicalNoteIcon, {
-                key: 1,
-                "root-class": 'pp-icons tw-h-full tw-w-auto',
-                class: "tw-cursor-pointer tw-text-white",
-                w: "40",
-                h: "40"
-              }))
+            : (openBlock(), createElementBlock("svg", _hoisted_4, _hoisted_7))
         ], 4 /* STYLE */),
-        createBaseVNode("div", _hoisted_4, [
-          createBaseVNode("div", _hoisted_5, [
-            createBaseVNode("div", _hoisted_6, [
+        createBaseVNode("div", _hoisted_8, [
+          createBaseVNode("div", _hoisted_9, [
+            createBaseVNode("div", _hoisted_10, [
               ((($data.currentTrackId > 0) || $data.continuousPlaybackStatus) && ($data.songsCount > 0))
                 ? (openBlock(), createElementBlock("div", {
                     key: 0,
                     class: "tw-flex-1 tw-m-1 tw-justify-center tw-align-middle",
                     onClick: _cache[0] || (_cache[0] = $event => ($options.previous()))
-                  }, [
-                    createVNode(_component_SkipBackwardIcon, {
-                      "root-class": 'pp-icons',
-                      class: "tw-cursor-pointer tw-text-white",
-                      w: "30",
-                      h: "30"
-                    })
-                  ]))
+                  }, _hoisted_12))
                 : createCommentVNode("v-if", true),
-              createBaseVNode("div", _hoisted_7, [
+              createBaseVNode("div", _hoisted_13, [
                 withDirectives(createBaseVNode("span", {
                   onClick: _cache[1] || (_cache[1] = $event => ($options.playTrack()))
-                }, [
-                  createVNode(_component_PlayIcon, {
-                    "root-class": 'pp-icons',
-                    class: "tw-cursor-pointer tw-text-white",
-                    w: "30",
-                    h: "30"
-                  })
-                ], 512 /* NEED_PATCH */), [
+                }, _hoisted_15, 512 /* NEED_PATCH */), [
                   [vShow, !$data.playerIsPlaying && !$data.playerIsLoading]
                 ]),
                 withDirectives(createBaseVNode("span", {
                   onClick: _cache[2] || (_cache[2] = $event => ($options.pause())),
                   disabled: $data.songsCount <= 0
-                }, [
-                  createVNode(_component_PauseIcon, {
-                    "root-class": 'pp-icons',
-                    class: "tw-cursor-pointer tw-text-white",
-                    w: "30",
-                    h: "30"
-                  })
-                ], 8 /* PROPS */, _hoisted_8), [
+                }, _hoisted_18, 8 /* PROPS */, _hoisted_16), [
                   [vShow, $data.playerIsPlaying && !$data.playerIsLoading]
                 ]),
                 createBaseVNode("span", null, [
-                  withDirectives(createVNode(_component_BufferingIcon, {
-                    "root-class": 'pp-icons',
-                    class: "tw-text-white tw-cursor-pointer",
-                    animate: "beat",
-                    w: "30",
-                    h: "30"
-                  }, null, 512 /* NEED_PATCH */), [
+                  withDirectives((openBlock(), createElementBlock("svg", _hoisted_19, _hoisted_22, 512 /* NEED_PATCH */)), [
                     [vShow, $data.playerIsLoading]
                   ])
                 ])
@@ -4572,59 +4173,33 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
                 class: "tw-flex-1 tw-m-1 tw-justify-center tw-align-middle",
                 onClick: _cache[3] || (_cache[3] = $event => ($options.stop())),
                 disabled: $data.songsCount <= 0
-              }, [
-                createVNode(_component_SquareIcon, {
-                  "root-class": 'pp-icons',
-                  class: "tw-cursor-pointer tw-text-white",
-                  w: "30",
-                  h: "30"
-                })
-              ], 8 /* PROPS */, _hoisted_9),
+              }, _hoisted_25, 8 /* PROPS */, _hoisted_23),
               ((($data.currentTrackId < $data.lastSongId) || $data.continuousPlaybackStatus) && ($data.songsCount > 0))
                 ? (openBlock(), createElementBlock("div", {
                     key: 1,
                     class: "tw-flex-1 tw-m-1 tw-justify-center tw-align-middle",
                     onClick: _cache[4] || (_cache[4] = $event => ($options.next())),
                     disabled: $data.songsCount <= 0
-                  }, [
-                    createVNode(_component_SkipForwardIcon, {
-                      "root-class": 'pp-icons',
-                      class: "tw-cursor-pointer tw-text-white",
-                      w: "30",
-                      h: "30"
-                    })
-                  ], 8 /* PROPS */, _hoisted_10))
+                  }, _hoisted_28, 8 /* PROPS */, _hoisted_26))
                 : createCommentVNode("v-if", true)
             ]),
             ($options.checkPlayerWidth(600) && $data.songs[$data.currentTrackId] && $props.showAudioData)
-              ? (openBlock(), createElementBlock("div", _hoisted_11, toDisplayString($data.songs[$data.currentTrackId].artist || 'Unknown') + " - " + toDisplayString($data.songs[$data.currentTrackId].title || 'Unknown'), 1 /* TEXT */))
+              ? (openBlock(), createElementBlock("div", _hoisted_29, toDisplayString($data.songs[$data.currentTrackId].artist || 'Unknown') + " - " + toDisplayString($data.songs[$data.currentTrackId].title || 'Unknown'), 1 /* TEXT */))
               : createCommentVNode("v-if", true),
-            createBaseVNode("div", _hoisted_12, [
+            createBaseVNode("div", _hoisted_30, [
               ($options.checkPlayerWidth(400) && $props.showAudioDuration )
-                ? (openBlock(), createElementBlock("div", _hoisted_13, toDisplayString($options.checkPlayerWidth(600) ? $options.currentTrackTimeOutput : '') + " " + toDisplayString($options.checkPlayerWidth(600) ? '-' : '') + " " + toDisplayString($options.currentTrackDurationOutput), 1 /* TEXT */))
+                ? (openBlock(), createElementBlock("div", _hoisted_31, toDisplayString($options.checkPlayerWidth(600) ? $options.currentTrackTimeOutput : '') + " " + toDisplayString($options.checkPlayerWidth(600) ? '-' : '') + " " + toDisplayString($options.currentTrackDurationOutput), 1 /* TEXT */))
                 : createCommentVNode("v-if", true),
-              createBaseVNode("div", _hoisted_14, [
+              createBaseVNode("div", _hoisted_32, [
                 createBaseVNode("div", {
                   onClick: _cache[5] || (_cache[5] = $event => ($options.decreaseVolume())),
                   disabled: ($data.volume <= 0.1) || ($data.songsCount <= 0),
                   class: normalizeClass($options.checkPlayerWidth(400) ? 'tw-bg-transparent tw-float-right tw-text-white tw-p-t-2' : 'tw-bg-transparent tw-float-right tw-text-white')
                 }, [
                   ($data.volume > 0)
-                    ? (openBlock(), createBlock(_component_VolumeReduceIcon, {
-                        key: 0,
-                        class: "tw-cursor-pointer tw-text-white",
-                        "root-class": 'pp-icons',
-                        w: $options.checkPlayerWidth(500) ? '35' : '25',
-                        h: $options.checkPlayerWidth(500) ? '35' : '25'
-                      }, null, 8 /* PROPS */, ["w", "h"]))
-                    : (openBlock(), createBlock(_component_VolumeReduceIconInactive, {
-                        key: 1,
-                        class: "tw-cursor-pointer tw-text-white",
-                        "root-class": 'pp-icons',
-                        w: $options.checkPlayerWidth(500) ? '35' : '25',
-                        h: $options.checkPlayerWidth(500) ? '35' : '25'
-                      }, null, 8 /* PROPS */, ["w", "h"]))
-                ], 10 /* CLASS, PROPS */, _hoisted_15)
+                    ? (openBlock(), createElementBlock("svg", _hoisted_34, _hoisted_37))
+                    : (openBlock(), createElementBlock("svg", _hoisted_38, _hoisted_41))
+                ], 10 /* CLASS, PROPS */, _hoisted_33)
               ]),
               createBaseVNode("div", {
                 class: normalizeClass($options.checkPlayerWidth(400) ? 'tw-flex-1 tw-mx-2 tw-p-t-2' : 'tw-flex-1 tw-mx-2')
@@ -4635,35 +4210,24 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
                   class: "tw-bg-transparent tw-float-right tw-text-white"
                 }, [
                   ($data.volume < 1)
-                    ? (openBlock(), createBlock(_component_VolumeAddIcon, {
-                        key: 0,
-                        class: "tw-cursor-pointer tw-text-white",
-                        "root-class": 'pp-icons',
-                        w: $options.checkPlayerWidth(500) ? '35' : '25',
-                        h: $options.checkPlayerWidth(500) ? '35' : '25'
-                      }, null, 8 /* PROPS */, ["w", "h"]))
-                    : (openBlock(), createBlock(_component_VolumeAddIconInactive, {
-                        key: 1,
-                        class: "tw-cursor-pointer tw-text-white",
-                        "root-class": 'pp-icons',
-                        w: $options.checkPlayerWidth(500) ? '35' : '25',
-                        h: $options.checkPlayerWidth(500) ? '35' : '25'
-                      }, null, 8 /* PROPS */, ["w", "h"]))
-                ], 8 /* PROPS */, _hoisted_16)
+                    ? (openBlock(), createElementBlock("svg", _hoisted_43, _hoisted_46))
+                    : (openBlock(), createElementBlock("svg", _hoisted_47, _hoisted_50))
+                ], 8 /* PROPS */, _hoisted_42)
               ], 2 /* CLASS */),
               createBaseVNode("div", {
                 class: normalizeClass($options.checkPlayerWidth(400) ? 'tw-flex-1 tw-mx-1 tw-p-t-2' : 'tw-flex-1 tw-mx-1')
               }, [
                 createBaseVNode("span", {
                   onClick: _cache[7] || (_cache[7] = $event => ($options.updateContinuousPlaybackStatus())),
-                  class: normalizeClass($data.continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white')
+                  class: normalizeClass($data.continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right t' : 'tw-bg-transparent tw-float-right tw-text-white')
                 }, [
-                  createVNode(_component_RepeatIcon, {
-                    "root-class": $data.continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons',
-                    class: "tw-cursor-pointer tw-text-white",
-                    w: $options.checkPlayerWidth(500) ? '35' : '25',
-                    h: $options.checkPlayerWidth(500) ? '35' : '25'
-                  }, null, 8 /* PROPS */, ["root-class", "w", "h"])
+                  (openBlock(), createElementBlock("svg", {
+                    xmlns: "http://www.w3.org/2000/svg",
+                    viewBox: "0 0 24 24",
+                    class: normalizeClass([$data.continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons', "tw-cursor-pointer tw-text-white"]),
+                    width: "25",
+                    height: "25"
+                  }, _hoisted_53, 2 /* CLASS */))
                 ], 2 /* CLASS */)
               ], 2 /* CLASS */)
             ])
