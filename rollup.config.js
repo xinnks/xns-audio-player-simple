@@ -9,7 +9,7 @@ export default [
     name: 'XnsAudioPlayerSimple',
     format: 'esm',
     exports: 'named',
-    file: 'dist/xaps.esm.js'
+    file: 'dist/index.esm.js'
   },
   plugins: [
     vue({
@@ -24,7 +24,7 @@ export default [
   output: {
     format: 'cjs',
     exports: 'named',
-    file: 'dist/xaps.ssr.js'
+    file: 'dist/index.ssr.js'
   },
   plugins: [
     vue({ 
@@ -40,7 +40,7 @@ export default [
   input: 'src/index.js',
   output: {
     format: 'iife',
-    file: 'dist/xaps.js',
+    file: 'dist/index.js',
     name: 'XnsAudioPlayerSimple'
   },
   plugins: [
