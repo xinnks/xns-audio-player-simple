@@ -16,11 +16,9 @@ specifiers:
   rollup-plugin-vue: ^6.0.0
   tailwindcss: ^3.0.23
   vue: ^3.2.31
-  vue-ionicons: ^3.0.5
 
 dependencies:
   vue: 3.2.31
-  vue-ionicons: 3.0.5
 
 devDependencies:
   '@rollup/plugin-node-resolve': 13.1.3_rollup@2.70.1
@@ -3890,10 +3888,6 @@ packages:
   /vlq/0.2.3:
     resolution: {integrity: sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==}
     dev: true
-
-  /vue-ionicons/3.0.5:
-    resolution: {integrity: sha512-1zZN/mcLRk6XKmQYMue699ut99qVMm+YfB3TY6jcTuzLSYh76BS9CcToLX/9v/0aOf8aTKHAPx2USdNBaY9IRw==}
-    dev: false
 
   /vue/3.2.31:
     resolution: {integrity: sha512-odT3W2tcffTiQCy57nOT93INw1auq5lYLLYtWpPYQQYQOOdHiqFct9Xhna6GJ+pJQaF67yZABraH47oywkJgFw==}

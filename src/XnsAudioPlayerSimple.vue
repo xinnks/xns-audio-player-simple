@@ -10,33 +10,33 @@
       <div :title="songsCount > 0 ? songs[currentTrackId].artist +' - '+songs[currentTrackId].title : 'No Audio To Play'" class="tw-flex tw-flex-row tw-w-full tw-p-r-3 tw-p-l-1 tw-m-0 tw-w-full pp-controls">
         <div class="tw-inline-flex tw-flex-grow-0 tw-w-12 tw-m-1 tw-float-left" :style="!(songsCount > 0 && songs[currentTrackId].cover !== '') ? 'background-color: '+coverColor : ''">
           <img class="tw-h-auto tw-w-full" v-if="songsCount > 0 && songs[currentTrackId].cover !== ''" :src="songs[currentTrackId].cover">
-          <MusicalNoteIcon v-else :root-class="'pp-icons tw-h-full tw-w-auto'" class="tw-cursor-pointer tw-text-white" w="40" h="40" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" v-else class="tw-cursor-pointer tw-text-white pp-icons tw-h-full tw-w-auto" width="40" height="40"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 13.535V3h8v3h-6v11a4 4 0 1 1-2-3.465z"/></svg>
         </div>
         <div class="tw-inline-flex tw-flex-grow tw-flex-col tw-items-center tw-w-full">
           <div class="tw-inline-flex tw-flex-row tw-w-full tw-items-center tw-align-middle tw-justify-between tw-p-l-3 tw-p-r-1 tw-py-1">
             <div class="tw-inline-flex tw-flex-row tw-justify-start">
               <div v-if="((currentTrackId > 0) || continuousPlaybackStatus) && (songsCount > 0)" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="previous()">
-                <SkipBackwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M8 11.333l10.223-6.815a.5.5 0 0 1 .777.416v14.132a.5.5 0 0 1-.777.416L8 12.667V19a1 1 0 0 1-2 0V5a1 1 0 1 1 2 0v6.333z"/></svg>
               </div>
               <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle">
                 
                 <span @click="playTrack()" v-show="!playerIsPlaying && !playerIsLoading">
-                  <PlayIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" class="pp-icons tw-cursor-pointer tw-text-white"><path fill="none" d="M0 0h24v24H0z"/><path d="M19.376 12.416L8.777 19.482A.5.5 0 0 1 8 19.066V4.934a.5.5 0 0 1 .777-.416l10.599 7.066a.5.5 0 0 1 0 .832z"/></svg>
                 </span>
                 
                 <span @click="pause()" v-show="playerIsPlaying && !playerIsLoading" :disabled="songsCount <= 0">
-                  <PauseIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"  class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 5h2v14H6V5zm10 0h2v14h-2V5z"/></svg>
                 </span>
                 
                 <span>
-                  <BufferingIcon :root-class="'pp-icons'" class="tw-text-white tw-cursor-pointer" animate="beat" v-show="playerIsLoading" w="30" h="30" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw-text-white tw-cursor-pointer pp-icons beat" width="30" height="30" v-show="playerIsLoading"><path fill="none" d="M0 0h24v24H0z"/><path d="M5 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm14 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-7 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                 </span>
               </div>
               <div class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="stop()" :disabled="songsCount <= 0">
-                <SquareIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" class="tw-cursor-pointer tw-text-white pp-icons"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 5h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>
               </div>
               <div v-if="((currentTrackId < lastSongId) || continuousPlaybackStatus) && (songsCount > 0)" class="tw-flex-1 tw-m-1 tw-justify-center tw-align-middle" @click="next()" :disabled="songsCount <= 0">
-                <SkipForwardIcon :root-class="'pp-icons'" class="tw-cursor-pointer tw-text-white" w="30" h="30"/>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M16 12.667L5.777 19.482A.5.5 0 0 1 5 19.066V4.934a.5.5 0 0 1 .777-.416L16 11.333V5a1 1 0 0 1 2 0v14a1 1 0 0 1-2 0v-6.333z"/></svg>
               </div>
             </div>
 
@@ -50,18 +50,21 @@
               </div>
               <div class="tw-flex-1 tw-mx-1">
                 <div @click="decreaseVolume()" :disabled="(volume <= 0.1) || (songsCount <= 0)" :class="checkPlayerWidth(400) ? 'tw-bg-transparent tw-float-right tw-text-white tw-p-t-2' : 'tw-bg-transparent tw-float-right tw-text-white'">
-                  <VolumeReduceIcon v-if="volume > 0" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
-                  <VolumeReduceIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" v-if="volume > 0" class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zM7 11v2h10v-2H7z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" v-else class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-5-9h10v2H7v-2z"/></svg>
                 </div>
               </div>
               <div :class="checkPlayerWidth(400) ? 'tw-flex-1 tw-mx-2 tw-p-t-2' : 'tw-flex-1 tw-mx-2'">
                 <div @click="increaseVolume()" :disabled="(volume >= 1) || (songsCount <= 0)" class="tw-bg-transparent tw-float-right tw-text-white">
-                  <VolumeAddIcon v-if="volume < 1" class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
-                  <VolumeAddIconInactive v-else class="tw-cursor-pointer tw-text-white" :root-class="'pp-icons'" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" v-if="volume < 1" class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11H7v2h4v4h2v-4h4v-2h-4V7h-2v4z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" v-else class="tw-cursor-pointer tw-text-white pp-icons" width="30" height="30"><path fill="none" d="M0 0h24v24H0z"/><path d="M11 11V7h2v4h4v2h-4v4h-2v-4H7v-2h4zm1 11C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/></svg>
                 </div>
               </div>
               <div :class="checkPlayerWidth(400) ? 'tw-flex-1 tw-mx-1 tw-p-t-2' : 'tw-flex-1 tw-mx-1'">
-                <span @click="updateContinuousPlaybackStatus()" :class="continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right tw-text-white tw-text-primary-green' : 'tw-bg-transparent tw-float-right tw-text-white'"><RepeatIcon :root-class="continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons'" class="tw-cursor-pointer tw-text-white" :w="checkPlayerWidth(500) ? '35' : '25'" :h="checkPlayerWidth(500) ? '35' : '25'"/></span>
+                <span @click="updateContinuousPlaybackStatus()" :class="continuousPlaybackStatus ? 'tw-bg-transparent tw-float-right t' : 'tw-bg-transparent tw-float-right tw-text-white'">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" :class="continuousPlaybackStatus ? 'pp-icons-green' : 'pp-icons'" class="tw-cursor-pointer tw-text-white" width="25" height="25"><path fill="none" d="M0 0h24v24H0z"/><path d="M8 20v1.932a.5.5 0 0 1-.82.385l-4.12-3.433A.5.5 0 0 1 3.382 18H18a2 2 0 0 0 2-2V8h2v8a4 4 0 0 1-4 4H8zm8-16V2.068a.5.5 0 0 1 .82-.385l4.12 3.433a.5.5 0 0 1-.321.884H6a2 2 0 0 0-2 2v8H2V8a4 4 0 0 1 4-4h10z"/></svg>
+                
+                </span>
               </div>
             </div>
           </div>
@@ -73,23 +76,8 @@
 
 <script>
 import './output.css'
-import RepeatIcon from 'vue-ionicons/dist/ios-repeat.vue'
-import SkipBackwardIcon from 'vue-ionicons/dist/ios-skip-backward.vue'
-import PlayIcon from 'vue-ionicons/dist/ios-play.vue'
-import PauseIcon from 'vue-ionicons/dist/ios-pause.vue'
-import SquareIcon from 'vue-ionicons/dist/ios-square.vue'
-import SkipForwardIcon from 'vue-ionicons/dist/ios-skip-forward.vue'
-import BufferingIcon from 'vue-ionicons/dist/ios-more.vue'
-import VolumeAddIconInactive from 'vue-ionicons/dist/ios-add-circle-outline.vue'
-import VolumeAddIcon from 'vue-ionicons/dist/ios-add-circle.vue'
-import VolumeReduceIconInactive from 'vue-ionicons/dist/ios-remove-circle-outline.vue'
-import VolumeReduceIcon from 'vue-ionicons/dist/ios-remove-circle.vue'
-import MusicalNoteIcon from 'vue-ionicons/dist/ios-musical-note.vue'
 export default {
   name: 'XnsAudioPlayerSimple',
-  components: {
-    RepeatIcon, SkipBackwardIcon, PlayIcon, PauseIcon, SquareIcon, SkipForwardIcon, BufferingIcon, VolumeAddIcon, VolumeReduceIcon, VolumeReduceIconInactive, VolumeAddIconInactive, MusicalNoteIcon
-  },
   props: {
     playlist: {
       type: Array,

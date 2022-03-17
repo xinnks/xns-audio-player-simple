@@ -44,8 +44,7 @@
     "tailwindcss": "^3.0.23"
   },
   "dependencies": {
-    "vue": "^3.2.31",
-    "vue-ionicons": "^3.0.5"
+    "vue": "^3.2.31"
   },
   "eslintConfig": {
     "rules": {
