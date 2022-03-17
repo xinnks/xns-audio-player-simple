@@ -1,38 +1,85 @@
 # xns-audio-player-simple
-A simple yet powerful music player for vuejs based on [xns-audio-player](https://github.com/xinnks/xns-audio-player "xns-audio-player") 
+A simple yet powerful music player for VueJs inspired by [xns-audio-player](https://github.com/xinnks/xns-audio-player "xns-audio-player") 
 
-## [Demo](https://jamesinkala.me/awesomeness "xns-audio-player-simple demo")
+## [Demo](https://xaps.jamesinkala.com "xns-audio-player-simple demo")
 
 ![xns-audio-player-simple](https://res.cloudinary.com/djx5h4cjt/image/upload/v1581286605/xns-audio-player-simple/xns-audio-player-simple-2.0.0.gif "xns-audio-player-simple")
 
 [![](https://badgen.net/npm/v/xns-audio-player-simple)](https://badgen.net/npm/v/xns-audio-player-simple) [![](https://badgen.net/npm/license/xns-audio-player-simple)](https://badgen.net/npm/license/xns-audio-player-simple) [![](https://badgen.net/packagephobia/publish/xns-audio-player-simple)](https://badgen.net/packagephobia/publish/xns-audio-player-simple) [![](https://badgen.net/bundlephobia/minzip/xns-audio-player-simple)](https://badgen.net/bundlephobia/minzip/xns-audio-player-simple)
 
-### install
+## Vue 2 Support
+- Docs - [README](https://github.com/xinnks/xns-audio-player-simple/tree/87b89c3ad99e974d727f5639ad505a146e047c1d#readme)
+- Last npm version - [xns-audio-player-simple@2.1.0](https://www.npmjs.com/package/xns-audio-player-simple/v/2.1.0)
+
+## Vue 3 Support
+
+**install**
 
 ```sh
 $ npm i xns-audio-player-simple
 ```
 
 
-### Import & initiate plugin on your entry js file
+**Import & initiate plugin on your entry js file**
 
 ```sh
-import XnsAudioPlayerSimple from 'xns-audio-player-simple'
+import { createApp } from "vue";
+import XnsAudioPlayerSimple from "xns-audio-player-simple";
+import App from "./App.vue";
 
-Vue.use(XnsAudioPlayerSimple)
+const app = createApp(App);
+app.use(XnsAudioPlayerSimple);
+app.mount("#app");
 ```
 
-### Example
+**Import plugin inside a Vue SFC**
 
 ```sh
-<xns-audio-player-simple :playlist="songs"></xns-audio-player-simple>
+<script>
+import XnsAudioPlayerSimple from "xns-audio-player-simple";
+
+export default {
+  components: [XnsAudioPlayerSimple],
+  data(){
+    return {
+      playlist: [...]
+    }
+  }
+}
+</script>
 ```
 
+**Import plugin inside a Vue SFC with the script setup sugar**
+
+```sh
+<script setup>
+import XnsAudioPlayerSimple from 'xns-audio-player-simple';
+import { ref } from "vue";  
+const playlist = ref([...]);
+</script>
+```
+
+**On the template**
+
+```sh
+<xns-audio-player-simple :playlist="playlist"></xns-audio-player-simple>
+```
+
+**Supported song Object properties**
+| Property | Type | Required |
+| ------ | ---- | -------- |
+| audio | String | true |
+| artist | String | true |
+| tittle | String | true |
+| album | String | true |
+| cover | String | true |
+
+**Example**
 ```sh
 export default {
   data () {
     return {
-      songs: [
+      playlist: [
         { audio: 'audio.mp3', artist: 'Superstar', tittle: 'Funky Disco House', album: 'Alpha Zulu', cover: 'cover-art.jpg' }, ...
       ]
     }
