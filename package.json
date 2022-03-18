@@ -2,8 +2,8 @@
   "private": false,
   "name": "xns-audio-player-simple",
   "version": "3.1.1",
-  "description": "a simple yet powerful music player for vuejs based on xns-audio-player",
-  "main": "./dist/index.js",
+  "description": "A simple yet powerful music player for VueJs inspired by xns-audio-player",
+  "main": "./src/index.js",
   "scripts": {
     "dev": "vite",
     "build": "npm run build:css && vite build",
