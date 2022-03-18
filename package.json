@@ -39,16 +39,6 @@
     "vite": "^2.8.6",
     "vue": "^3.2.31"
   },
-  "eslintConfig": {
-    "rules": {
-      "no-console": "off"
-    }
-  },
-  "pnpm": {
-    "overrides": {
-      "postcss@<7.0.36": ">=7.0.36",
-      "nth-check@<2.0.1": ">=2.0.1"
-    }
   "peerDependencies": {
     "vue": "^3.2.31"
   }
