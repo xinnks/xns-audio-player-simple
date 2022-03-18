@@ -5,8 +5,8 @@
   "description": "a simple yet powerful music player for vuejs based on xns-audio-player",
   "main": "./dist/index.js",
   "scripts": {
-    "dev": "vue serve src/XnsAudioPlayerSimple.vue",
-    "build": "npx rollup --config",
+    "dev": "vite",
+    "build": "npm run build:css && vite build",
     "build:css": "npx tailwindcss -i src/tailwind.css -o src/output.css -m",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
