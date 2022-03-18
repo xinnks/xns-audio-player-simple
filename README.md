@@ -24,8 +24,9 @@ $ npm i xns-audio-player-simple
 
 ```sh
 import { createApp } from "vue";
-import XnsAudioPlayerSimple from "xns-audio-player-simple";
 import App from "./App.vue";
+import XnsAudioPlayerSimple from "xns-audio-player-simple";
+import "xns-audio-player-simple/styles.css"
 
 const app = createApp(App);
 app.use(XnsAudioPlayerSimple);
@@ -36,10 +37,11 @@ app.mount("#app");
 
 ```sh
 <script>
-import XnsAudioPlayerSimple from "xns-audio-player-simple";
+import { XnsAudioPlayerSimple } from "xns-audio-player-simple";
+import "xns-audio-player-simple/styles.css";
 
 export default {
-  components: [XnsAudioPlayerSimple],
+  components: { XnsAudioPlayerSimple },
   data(){
     return {
       playlist: [...]
@@ -49,11 +51,12 @@ export default {
 </script>
 ```
 
-**Import plugin inside a Vue SFC with the script setup sugar**
+**Import plugin inside a Vue SFC with the script-setup sugar**
 
 ```sh
 <script setup>
 import XnsAudioPlayerSimple from 'xns-audio-player-simple';
+import "xns-audio-player-simple/styles.css";
 import { ref } from "vue";  
 const playlist = ref([...]);
 </script>
