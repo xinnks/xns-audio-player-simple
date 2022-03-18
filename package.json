@@ -1,7 +1,7 @@
 {
   "private": false,
   "name": "xns-audio-player-simple",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "A simple yet powerful music player for VueJs inspired by xns-audio-player",
   "main": "./src/index.js",
   "scripts": {
